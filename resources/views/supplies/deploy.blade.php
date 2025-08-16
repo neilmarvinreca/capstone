@@ -143,22 +143,16 @@
 
         <!-- QR Code -->
         <div class="col-span-12">
-            <div class="input-form">
-                <label for="qr_code" class="form-label">QR Code <span class="text-danger">*</span></label>
-                <div class="flex rounded-md shadow-sm">
-                    <input type="text" id="qr_code" name="qr_code" 
-                           class="form-control w-full rounded-r-none @error('qr_code') border-danger @enderror" 
-                           value="{{ old('qr_code', 'DEP-' . strtoupper(Str::random(10))) }}"
-                           required>
-                    <button type="button" onclick="generateQRCode()"
-                            class="inline-flex items-center px-3 rounded-r-md border border-l-0 border-gray-300 bg-gray-50 text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500">
-                        <i data-lucide="refresh-cw" class="h-4 w-4"></i>
-                    </button>
-                </div>
-                @error('qr_code')
-                    <div class="text-danger mt-2">{{ $message }}</div>
-                @enderror
-            </div>
+        <div class="flex rounded-md shadow-sm">
+    <input type="text" id="qr_code" name="qr_code" 
+           class="form-control w-full @error('qr_code') border-danger @enderror" 
+           value="{{ old('qr_code', 'DEP-' . strtoupper(Str::random(10))) }}"
+           required>
+    <button type="button" onclick="generateQRCode()"
+            class="ml-2 inline-flex items-center px-3 rounded-md border border-gray-300 bg-gray-50 text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500">
+        <i data-lucide="refresh-cw" class="h-4 w-4"></i>
+    </button>
+      </div>
         </div>
 
         <!-- Department -->

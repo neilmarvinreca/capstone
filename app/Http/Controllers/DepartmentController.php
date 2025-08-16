@@ -48,7 +48,9 @@ class DepartmentController extends Controller
      */
     public function create()
     {
-        $users = User::orderBy('name')->pluck('name', 'id');
+        $users = User::where('role', 'Department User')
+            ->orderBy('name')
+            ->pluck('name', 'id');
         return view('departments.create', compact('users'));
     }
 
@@ -129,7 +131,9 @@ class DepartmentController extends Controller
      */
     public function edit(Department $department)
     {
-        $users = User::orderBy('name')->pluck('name', 'id');
+        $users = User::where('role', 'Department User')
+            ->orderBy('name')
+            ->pluck('name', 'id');
         return view('departments.edit', compact('department', 'users'));
     }
     
@@ -249,13 +253,6 @@ class DepartmentController extends Controller
     protected function validateDepartment(Request $request, $departmentId = null)
     {
         $rules = [
-            'departmentID' => [
-                'required',
-                'string',
-                'max:50',
-                Rule::unique('departments', 'departmentID')
-                    ->ignore($departmentId, 'departmentID')
-            ],
             'locationcode' => [
                 'required',
                 'string',
@@ -264,7 +261,16 @@ class DepartmentController extends Controller
                     ->ignore($departmentId, 'departmentID')
             ],
             'officename' => 'required|string|max:100',
-            'accountableper' => 'required|exists:users,id',
+            'accountableper' => [
+                'required',
+                'exists:users,id',
+                function ($attribute, $value, $fail) {
+                    $user = User::find($value);
+                    if (!$user || $user->role !== 'Department User') {
+                        $fail('The selected accountable person must be a Department User.');
+                    }
+                }
+            ],
             'description' => 'nullable|string|max:255',
         ];
         

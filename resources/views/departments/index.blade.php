@@ -55,7 +55,7 @@
                         <tr>
                             <th class="w-16 text-center">ID</th>
                             <th class="min-w-[200px] text-center">Department</th>
-                            <th class="text-center">Location</th>
+                            <th class="text-center">Location Code</th>
                             <th class="text-center">Accountable Person</th>
                             <th class="w-24 text-center">Supplies</th>
                             <th class="w-32 text-center">Created</th>

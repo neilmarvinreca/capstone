@@ -18,11 +18,12 @@
         @method('PUT')
         <div class="col-span-12">
             <div class="input-form">
-                <label for="departmentID" class="form-label">Department ID <span class="text-danger">*</span></label>
-                <input type="text" id="departmentID" name="departmentID" class="form-control w-full @error('departmentID') border-danger @enderror" value="{{ old('departmentID', $department->departmentID) }}" required aria-required="true">
-                @error('departmentID')
-                    <div class="text-danger mt-2">{{ $message }}</div>
-                @enderror
+                <label for="departmentID" class="form-label">Department ID</label>
+                <input type="text" id="departmentID" name="departmentID" class="form-control w-full bg-gray-100" value="{{ $department->departmentID }}" readonly>
+                <div class="text-xs text-gray-500 mt-1">
+                    <i data-lucide="info" class="w-3 h-3 inline mr-1"></i>
+                    Department ID cannot be changed once created.
+                </div>
             </div>
         </div>
         <div class="col-span-12">
@@ -45,15 +46,19 @@
         </div>
         <div class="col-span-12">
             <div class="input-form">
-                <label for="accountableper" class="form-label">Accountable Person <span class="text-danger">*</span></label>
+                <label for="accountableper" class="form-label">Accountable Person (Department User) <span class="text-danger">*</span></label>
                 <select id="accountableper" name="accountableper" class="form-select w-full @error('accountableper') border-danger @enderror" required aria-required="true">
                     <option value="">Select Accountable Person</option>
                     @foreach($users as $id => $name)
                         <option value="{{ $id }}" {{ old('accountableper', $department->accountableper) == $id ? 'selected' : '' }}>{{ $name }}</option>
                     @endforeach
                 </select>
+                <div class="text-xs text-gray-500 mt-1">
+                    <i data-lucide="info" class="w-3 h-3 inline mr-1"></i>
+                    Only Department Users are available for selection as accountable persons.
+                </div>
                 @error('accountableper')
-                    <div class="text-danger mt-2">{{ $message }}</div>
+                    <div class="message">{{ $message }}</div>
                 @enderror
             </div>
         </div>

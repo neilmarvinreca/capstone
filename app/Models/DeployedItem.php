@@ -173,4 +173,12 @@ class DeployedItem extends Model
         // The departments table uses 'departmentID' as the primary key
         return $this->belongsTo(Department::class, 'departmentID', 'departmentID');
     }
+
+    /**
+     * Get the deployment notifications for this item.
+     */
+    public function notifications()
+    {
+        return $this->hasMany(\App\Models\DeploymentNotification::class, 'deployed_item_id', 'deployedID');
+    }
 }

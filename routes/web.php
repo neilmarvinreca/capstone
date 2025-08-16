@@ -16,6 +16,7 @@ use App\Http\Controllers\Auth\NewPasswordController;
 use App\Http\Controllers\DepartmentController;
 use App\Http\Controllers\DeployedItemController;
 use App\Http\Controllers\DeploymentRequestController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Middleware\RoleMiddleware;
 
 // Authentication Routes
@@ -102,6 +103,13 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     Route::put('profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password');
+
+    // Notifications
+    Route::prefix('notifications')->name('notifications.')->group(function () {
+        Route::get('/', [NotificationController::class, 'getNotifications'])->name('index');
+        Route::patch('{notification}/read', [NotificationController::class, 'markAsRead'])->name('read');
+        Route::patch('mark-all-read', [NotificationController::class, 'markAllAsRead'])->name('mark-all-read');
+    });
 
     // Users Management Routes
     Route::prefix('users')->name('users.')->middleware('admin')->group(function () {

@@ -68,6 +68,18 @@
         </li>
         @endif
 
+        <!-- Notifications - Visible to Department User only -->
+        @if($userRole === 'Department User')
+        <li>
+            <a href="{{ route('notifications.index') }}" class="side-menu {{ request()->routeIs('notifications.*') ? 'side-menu--active' : '' }}">
+                <div class="side-menu__icon">
+                    <i data-lucide="bell"></i>
+                </div>
+                <div class="side-menu__title">Notifications</div>
+            </a>
+        </li>
+        @endif
+
         <!-- Reports - Visible to Inventory Manager and above -->
         @if($isInventoryManager)
         <li>

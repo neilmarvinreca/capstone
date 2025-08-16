@@ -13,17 +13,17 @@
 </div>
 
 <div class="intro-y box p-5 mt-5">
+    <div class="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+        <div class="flex items-center">
+            <i data-lucide="info" class="w-5 h-5 text-blue-500 mr-2"></i>
+            <p class="text-sm text-blue-700">
+                <strong>Note:</strong> The Department ID will be automatically generated when you save this form.
+            </p>
+        </div>
+    </div>
+    
     <form method="POST" action="{{ route('departments.store') }}" class="grid grid-cols-12 gap-6">
         @csrf
-        <div class="col-span-12">
-            <div class="input-form">
-                <label for="departmentID" class="form-label">Department ID <span class="text-danger">*</span></label>
-                <input type="text" id="departmentID" name="departmentID" class="form-control w-full @error('departmentID') border-danger @enderror" value="{{ old('departmentID') }}" required aria-required="true">
-                @error('departmentID')
-                    <div class="text-danger mt-2">{{ $message }}</div>
-                @enderror
-            </div>
-        </div>
         <div class="col-span-12">
             <div class="input-form">
                 <label for="locationcode" class="form-label">Location Code <span class="text-danger">*</span></label>
@@ -44,15 +44,19 @@
         </div>
         <div class="col-span-12">
             <div class="input-form">
-                <label for="accountableper" class="form-label">Accountable Person <span class="text-danger">*</span></label>
+                <label for="accountableper" class="form-label">Accountable Person (Department User) <span class="text-danger">*</span></label>
                 <select id="accountableper" name="accountableper" class="form-select w-full @error('accountableper') border-danger @enderror" required aria-required="true">
                     <option value="">Select Accountable Person</option>
                     @foreach($users as $id => $name)
                         <option value="{{ $id }}" {{ old('accountableper') == $id ? 'selected' : '' }}>{{ $name }}</option>
                     @endforeach
                 </select>
+                <div class="text-xs text-gray-500 mt-1">
+                    <i data-lucide="info" class="w-3 h-3 inline mr-1"></i>
+                    Only Department Users role are available for selection as accountable persons.
+                </div>
                 @error('accountableper')
-                    <div class="text-danger mt-2">{{ $message }}</div>
+                    <div class="message">{{ $message }}</div>
                 @enderror
             </div>
         </div>

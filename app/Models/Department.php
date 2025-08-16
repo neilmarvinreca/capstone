@@ -12,11 +12,10 @@ class Department extends Model
     use HasFactory, SoftDeletes;
 
     protected $primaryKey = 'departmentID';
-    public $incrementing = false;
-    protected $keyType = 'string';
+    public $incrementing = true;
+    protected $keyType = 'int';
     
     protected $fillable = [
-        'departmentID',
         'locationcode',
         'officename',
         'accountableper',

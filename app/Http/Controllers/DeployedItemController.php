@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\DeployedItem;
 use App\Models\Department;
 use App\Models\Supply;
+use App\Services\DeploymentNotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Auth;
@@ -163,6 +164,9 @@ class DeployedItemController extends Controller
                     ->withProperties($validated)
                     ->log('created');
 
+                // Create notifications for department users
+                DeploymentNotificationService::createDeploymentNotifications($deployedItem);
+
                 // If this is an AJAX request, return JSON response
                 if ($request->wantsJson()) {
                     return response()->json([
@@ -264,6 +268,9 @@ class DeployedItemController extends Controller
                     ])
                     ->log('Deployed from bulk supply and updated total amount');
                 
+                // Create notifications for department users
+                DeploymentNotificationService::createDeploymentNotifications($deployedItem);
+                
                 $deployedItems[] = $deployedItem;
             }
             
@@ -358,6 +365,9 @@ class DeployedItemController extends Controller
                 'updated_amount' => $supply->amount
             ])
             ->log('Deployed from supply and updated total amount');
+        
+        // Create notifications for department users
+        DeploymentNotificationService::createDeploymentNotifications($deployedItem);
             
         return redirect()->route('deployed-items.index')
             ->with('success', 'Item deployed successfully!');

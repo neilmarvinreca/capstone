@@ -48,6 +48,7 @@ class User extends Authenticatable
         'is_admin',
         'login_attempts',
         'locked_until',
+        'department_id',
     ];
 
     /**
@@ -77,4 +78,12 @@ class User extends Authenticatable
     }
 
     // Deployed items relationship can be added here if needed in the future
+    
+    /**
+     * Get the department that the user belongs to.
+     */
+    public function department()
+    {
+        return $this->belongsTo(Department::class, 'department_id', 'departmentID');
+    }
 }
