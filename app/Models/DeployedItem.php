@@ -29,7 +29,7 @@ class DeployedItem extends Model
     {
         return 'deployedID';
     }
-
+    
     protected $fillable = [
         'deployedID',
         // CamelCase columns
@@ -108,7 +108,7 @@ class DeployedItem extends Model
             ->logOnly([
                 'itemName', 
                 'status', 
-                'department_id',
+                'departmentID',
                 'dateDeployed',
                 'quantity',
                 'condition',
@@ -169,8 +169,8 @@ class DeployedItem extends Model
      */
     public function department()
     {
-        $foreignKey = Schema::hasColumn('deployed_items', 'department_id') ? 'department_id' : 'departmentID';
-        $ownerKey = Schema::hasColumn('departments', 'department_id') ? 'department_id' : 'departmentID';
-        return $this->belongsTo(Department::class, $foreignKey, $ownerKey);
+        // The deployed_items table uses 'departmentID' as the foreign key
+        // The departments table uses 'departmentID' as the primary key
+        return $this->belongsTo(Department::class, 'departmentID', 'departmentID');
     }
 }

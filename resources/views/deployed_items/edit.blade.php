@@ -17,12 +17,12 @@
         @csrf
         @method('PUT')
         
-        <!-- Item Name -->
+        <!-- QR Code -->
         <div class="col-span-12 md:col-span-6">
             <div class="input-form">
-                <label for="itemName" class="form-label">Item Name <span class="text-danger">*</span></label>
-                <input type="text" id="itemName" name="itemName" class="form-control w-full @error('itemName') border-danger @enderror" value="{{ old('itemName', $deployedItem->itemName) }}" required>
-                @error('itemName')
+                <label for="qrCode" class="form-label">QR Code <span class="text-danger">*</span></label>
+                <input type="text" id="qrCode" name="qrCode" class="form-control w-full @error('qrCode') border-danger @enderror" value="{{ old('qrCode', $deployedItem->qrCode) }}" required>
+                @error('qrCode')
                     <div class="text-danger mt-2">{{ $message }}</div>
                 @enderror
             </div>
@@ -31,14 +31,14 @@
         <!-- Department -->
         <div class="col-span-12 md:col-span-6">
             <div class="input-form">
-                <label for="department_id" class="form-label">Department <span class="text-danger">*</span></label>
-                <select id="department_id" name="department_id" class="form-select w-full @error('department_id') border-danger @enderror" required>
+                <label for="departmentID" class="form-label">Department <span class="text-danger">*</span></label>
+                <select id="departmentID" name="departmentID" class="form-select w-full @error('departmentID') border-danger @enderror" required>
                     <option value="">Select Department</option>
                     @foreach($departments as $id => $name)
-                        <option value="{{ $id }}" {{ old('department_id', $deployedItem->department_id) == $id ? 'selected' : '' }}>{{ $name }}</option>
+                        <option value="{{ $id }}" {{ old('departmentID', $deployedItem->departmentID) == $id ? 'selected' : '' }}>{{ $name }}</option>
                     @endforeach
                 </select>
-                @error('department_id')
+                @error('departmentID')
                     <div class="text-danger mt-2">{{ $message }}</div>
                 @enderror
             </div>

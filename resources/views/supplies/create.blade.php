@@ -13,23 +13,6 @@
 </div>
 
 <div class="intro-y box p-5 mt-5">
-    @if($errors->any())
-        <div class="alert alert-danger mb-4">
-            <div class="flex items-center">
-                <div class="mr-3">
-                    <i data-lucide="alert-triangle" class="w-6 h-6 text-red-500"></i>
-                </div>
-                <div>
-                    <h4 class="font-medium">There {{ $errors->count() === 1 ? 'is' : 'are' }} {{ $errors->count() }} {{ Str::plural('error', $errors->count()) }} with your submission</h4>
-                    <ul class="mt-2 list-disc list-inside text-red-600">
-                        @foreach ($errors->all() as $error)
-                            <li>{{ $error }}</li>
-                        @endforeach
-                    </ul>
-                </div>
-            </div>
-        </div>
-    @endif
 
     <form method="POST" action="{{ route('supplies.store') }}" class="grid grid-cols-12 gap-6">
         @csrf
@@ -99,10 +82,12 @@
         <!-- Estimated Life -->
         <div class="col-span-12 sm:col-span-6">
             <div class="input-form">
-                <label for="estimated_life" class="form-label">Estimated Life</label>
-                <input type="text" id="estimated_life" name="estimated_life" 
+                <label for="estimated_life" class="form-label">Estimated Life (Years)</label>
+                <input type="number" id="estimated_life" name="estimated_life" 
                        class="form-control w-full @error('estimated_life') border-danger @enderror" 
-                       value="{{ old('estimated_life') }}">
+                       value="{{ old('estimated_life') }}" 
+                       min="0" 
+                       step="1">
                 @error('estimated_life')
                     <div class="text-danger mt-2">{{ $message }}</div>
                 @enderror
@@ -143,21 +128,43 @@
             </div>
         </div>
 
+        <!-- Minimum Stock -->
+        <div class="col-span-12 sm:col-span-6">
+            <div class="input-form">
+                <label for="minimum_stock" class="form-label">Minimum Stock <span class="text-danger">*</span></label>
+                <input type="number" id="minimum_stock" name="minimum_stock" 
+                       class="form-control w-full @error('minimum_stock') border-danger @enderror" 
+                       value="{{ old('minimum_stock', 0) }}" 
+                       min="0" 
+                       required>
+                @error('minimum_stock')
+                    <div class="text-danger mt-2">{{ $message }}</div>
+                @enderror
+            </div>
+        </div>
+
         
 
         <!-- Fund Code -->
         <div class="col-span-12 sm:col-span-6">
             <div class="input-form">
                 <label for="fund_code" class="form-label">Fund Code <span class="text-danger">*</span></label>
-                <input type="text" id="fund_code" name="fund_code" 
-                       class="form-control w-full @error('fund_code') border-danger @enderror" 
-                       value="{{ old('fund_code') }}" 
-                       required>
+                <select id="fund_code" name="fund_code" 
+                        class="form-select w-full @error('fund_code') border-danger @enderror" 
+                        required>
+                    <option value="" disabled selected>Select Fund Code</option>
+                    <option value="FUND 101" {{ old('fund_code') == 'FUND 101' ? 'selected' : '' }}>FUND 101</option>
+                    <option value="FUND 161" {{ old('fund_code') == 'FUND 161' ? 'selected' : '' }}>FUND 161</option>
+                    <option value="FUND 162" {{ old('fund_code') == 'FUND 162' ? 'selected' : '' }}>FUND 162</option>
+                    <option value="FUND 163" {{ old('fund_code') == 'FUND 163' ? 'selected' : '' }}>FUND 163</option>
+                    <option value="FUND 164" {{ old('fund_code') == 'FUND 164' ? 'selected' : '' }}>FUND 164</option>
+                </select>
                 @error('fund_code')
                     <div class="text-danger mt-2">{{ $message }}</div>
                 @enderror
             </div>
         </div>
+
 
         <!-- PPE Sub Account -->
         <div class="col-span-12 sm:col-span-6">
@@ -223,27 +230,6 @@
 
 @push('scripts')
 <script>
-function confirmDeleteTransaction(id, form) {
-    Swal.fire({
-        title: 'Are you sure?',
-        text: `You are about to delete transaction #${id}. This action cannot be undone.`,
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonText: 'Yes, delete it!',
-        cancelButtonText: 'Cancel',
-        reverseButtons: true,
-        customClass: {
-            confirmButton: 'btn btn-danger',
-            cancelButton: 'btn btn-secondary mr-2'
-        },
-        buttonsStyling: false
-    }).then((result) => {
-        if (result.isConfirmed) {
-            form.submit();
-        }
-    });
-}
-
     // Function to calculate total amount
     function calculateTotal() {
         const unitCost = parseFloat(document.getElementById('unit_cost').value) || 0;
@@ -267,6 +253,53 @@ function confirmDeleteTransaction(id, form) {
         
         // Calculate initial total if values exist
         calculateTotal();
+        
+        // Show success/error messages
+        @if(session('success'))
+            Swal.fire({
+                title: 'Success',
+                html: `
+                    <div class="text-center py-2">
+                        <i data-lucide="check-circle" class="w-10 h-10 mx-auto text-green-500 mb-2"></i>
+                        <p class="text-sm text-gray-600">
+                            Successfully added Supply
+                        </p>
+                    </div>
+                `,
+                showConfirmButton: true,
+                confirmButtonText: 'OK',
+                customClass: {
+                    confirmButton: 'btn btn-sm btn-warning px-4 py-1 text-xs',
+                    popup: 'text-sm',
+                    actions: 'mt-3'
+                },
+                buttonsStyling: false,
+                width: '20rem',
+                padding: '1rem'
+            });
+        @elseif(session('error'))
+            Swal.fire({
+                title: 'Error',
+                html: `
+                    <div class="text-center py-2">
+                        <i data-lucide="x-circle" class="w-10 h-10 mx-auto text-red-500 mb-2"></i>
+                        <p class="text-sm text-gray-600">
+                            Warning, An error occurred while adding a supply
+                        </p>
+                    </div>
+                `,
+                showConfirmButton: true,
+                confirmButtonText: 'OK',
+                customClass: {
+                    confirmButton: 'btn btn-sm btn-warning px-4 py-1 text-xs',
+                    popup: 'text-sm',
+                    actions: 'mt-3'
+                },
+                buttonsStyling: false,
+                width: '20rem',
+                padding: '1rem'
+            });
+        @endif
     });
 </script>
 @endpush

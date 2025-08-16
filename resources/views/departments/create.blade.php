@@ -75,4 +75,62 @@
         </div>
     </form>
 </div>
+
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Show success/error messages
+        @if(session('success'))
+            Swal.fire({
+                title: 'Success',
+                html: `
+                    <div class="text-center py-2">
+                        <i data-lucide="check-circle" class="w-10 h-10 mx-auto text-green-500 mb-2"></i>
+                        <p class="text-sm text-gray-600">
+                            Successfully added Department
+                        </p>
+                    </div>
+                `,
+                showConfirmButton: true,
+                confirmButtonText: 'OK',
+                customClass: {
+                    confirmButton: 'btn btn-sm btn-warning px-4 py-1 text-xs',
+                    popup: 'text-sm',
+                    actions: 'mt-3'
+                },
+                buttonsStyling: false,
+                width: '20rem',
+                padding: '1rem'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.href = '{{ route("departments.index") }}';
+                }
+            });
+        @elseif(session('error'))
+            Swal.fire({
+                title: 'Error',
+                html: `
+                    <div class="text-center py-2">
+                        <i data-lucide="x-circle" class="w-10 h-10 mx-auto text-red-500 mb-2"></i>
+                        <p class="text-sm text-gray-600">
+                            Warning, An error occurred while adding a department
+                        </p>
+                    </div>
+                `,
+                showConfirmButton: true,
+                confirmButtonText: 'OK',
+                customClass: {
+                    confirmButton: 'btn btn-sm btn-warning px-4 py-1 text-xs',
+                    popup: 'text-sm',
+                    actions: 'mt-3'
+                },
+                buttonsStyling: false,
+                width: '20rem',
+                padding: '1rem'
+            });
+        @endif
+    });
+</script>
+@endpush
+
 @endsection 

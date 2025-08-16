@@ -141,6 +141,7 @@
             </thead>
             <tbody>
                 @forelse($deployedItems as $item)
+                    <!-- Debug: Item ID: {{ $item->id }}, DeployedID: {{ $item->deployedID }} -->
                     <tr class="intro-x">
                         <td>
                             <a href="{{ route('deployed-items.show', $item) }}" class="font-medium">{{ $item->itemName }}</a>
@@ -168,19 +169,19 @@
                                 <a href="{{ route('deployed-items.edit', $item) }}" class="btn btn-sm btn-primary w-8 h-8 flex items-center justify-center p-0 mx-2" title="Edit">
                                     <i data-lucide="edit" class="w-4 h-4"></i>
                                 </a>
-                                <button type="button" 
-                                        onclick="confirmArchive('{{ $item->deployedID ?? $item->id }}', '{{ addslashes($item->itemName ?? $item->supply->name ?? 'this item') }}')" 
-                                        class="btn btn-sm w-8 h-8 flex items-center justify-center p-0 mx-1" 
-                                        style="background-color: #f59e0b; border-color: #f59e0b; color: white;"
-                                        title="Archive">
-                                    <i data-lucide="archive" class="w-4 h-4"></i>
-                                </button>
-                                <form id="archive-form-{{ $item->deployedID ?? $item->id }}" 
-                                      action="{{ route('deployed-items.archive', $item->deployedID ?? $item->id) }}" 
+                                <form id="archive-form-{{ $item->deployedID }}" 
+                                      action="{{ route('deployed-items.archive', $item->deployedID) }}" 
                                       method="POST" 
-                                      class="hidden">
+                                      class="inline"
+                                      onsubmit="return confirm('Are you sure you want to archive this item?');">
                                     @csrf
                                     @method('PUT')
+                                    <button type="submit" 
+                                            class="btn btn-sm w-8 h-8 flex items-center justify-center p-0 mx-1" 
+                                            style="background-color: #f59e0b; border-color: #f59e0b; color: white;"
+                                            title="Archive">
+                                        <i data-lucide="archive" class="w-4 h-4"></i>
+                                    </button>
                                 </form>
                             </div>
                         </td>

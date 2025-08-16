@@ -26,28 +26,28 @@
                 <table class="table table-report">
                     <thead>
                         <tr>
-                            <th class="w-16">ID</th>
-                            <th class="min-w-[250px]">Category Name</th>
-                            <th>Description</th>
-                            <th class="w-32">Archived Date</th>
-                            <th class="w-32">Actions</th>
+                            <th class="w-16 text-center">ID</th>
+                            <th class="min-w-[250px] text-center">Category Name</th>
+                            <th class="text-center">Description</th>
+                            <th class="w-32 text-center">Archived Date</th>
+                            <th class="w-32 text-center">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach($categories as $category)
                             <tr>
-                                <td>{{ $category->categoryID ?? $category->id }}</td>
-                                <td class="whitespace-nowrap">
+                                <td class="text-center">{{ $category->categoryID ?? $category->id }}</td>
+                                <td class="whitespace-nowrap text-center">
                                     <div class="font-medium">
                                         {{ $category->categoryName }}
                                     </div>
                                 </td>
-                                <td class="max-w-sm">
+                                <td class="max-w-sm text-center">
                                     <div class="text-gray-600 text-sm line-clamp-2">
                                         {{ $category->description ?? 'No description' }}
                                     </div>
                                 </td>
-                                <td>
+                                <td class="text-center">
                                     <div class="text-xs text-gray-500">
                                         {{ $category->deleted_at->format('M d, Y') }}
                                         <div class="text-gray-400">{{ $category->deleted_at->diffForHumans() }}</div>

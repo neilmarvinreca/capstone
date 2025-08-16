@@ -95,22 +95,6 @@
             </div>
         </div>
         
-        <div class="col-span-12 xl:col-span-6">
-            <div class="input-form">
-                <label for="department_id" class="form-label">Department <span class="text-danger">*</span></label>
-                <select id="department_id" name="department_id" class="form-select w-full @error('department_id') border-danger @enderror" required aria-required="true">
-                    <option value="">Select Department</option>
-                    @foreach($departments as $department)
-                        <option value="{{ $department->departmentID }}" {{ old('department_id', $supply->department_id) == $department->departmentID ? 'selected' : '' }}>
-                            {{ $department->officename }}
-                        </option>
-                    @endforeach
-                </select>
-                @error('department_id')
-                    <div class="text-danger mt-2">{{ $message }}</div>
-                @enderror
-            </div>
-        </div>
         
         <div class="col-span-12 xl:col-span-6">
             <div class="input-form">
@@ -165,6 +149,20 @@
         
         <input type="hidden" name="added_by" value="{{ auth()->id() }}">
         
+        <div class="col-span-12 xl:col-span-6">
+            <div class="input-form">
+                <label for="minimum_stock" class="form-label">Minimum Stock <span class="text-danger">*</span></label>
+                <input type="number" id="minimum_stock" name="minimum_stock" 
+                       class="form-control w-full @error('minimum_stock') border-danger @enderror" 
+                       value="{{ old('minimum_stock', $supply->minimum_stock) }}" 
+                       min="0" 
+                       required>
+                @error('minimum_stock')
+                    <div class="text-danger mt-2">{{ $message }}</div>
+                @enderror
+            </div>
+        </div>
+
         <div class="col-span-12 xl:col-span-6">
             <div class="input-form">
                 <label for="gl_code" class="form-label">GL Code <span class="text-danger">*</span></label>

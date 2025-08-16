@@ -53,20 +53,20 @@
                 <table class="table table-report">
                     <thead>
                         <tr>
-                            <th class="w-16">ID</th>
-                            <th class="min-w-[200px]">Department</th>
-                            <th>Location</th>
-                            <th>Accountable Person</th>
-                            <th class="w-24">Supplies</th>
-                            <th class="w-32">Created</th>
-                            <th class="w-32">Actions</th>
+                            <th class="w-16 text-center">ID</th>
+                            <th class="min-w-[200px] text-center">Department</th>
+                            <th class="text-center">Location</th>
+                            <th class="text-center">Accountable Person</th>
+                            <th class="w-24 text-center">Supplies</th>
+                            <th class="w-32 text-center">Created</th>
+                            <th class="w-32 text-center">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         @forelse($departments as $department)
                             <tr>
-                                <td>{{ $department->departmentID }}</td>
-                                <td class="whitespace-nowrap">
+                                <td class="text-center">{{ $department->departmentID }}</td>
+                                <td class="whitespace-nowrap text-center">
                                     <div class="font-medium">
                                         <a href="{{ route('departments.show', $department) }}" class="text-primary hover:underline">
                                             {{ $department->officename }}
@@ -76,12 +76,12 @@
                                         {{ $department->description ?? 'No description' }}
                                     </div>
                                 </td>
-                                <td>
+                                <td class="text-center">
                                     <span class="text-sm">{{ $department->locationcode }}</span>
                                 </td>
-                                <td>
+                                <td class="text-center">
                                     @if($department->user)
-                                        <div class="flex items-center">
+                                        <div class="flex items-center justify-center">
                                             <div class="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center mr-2">
                                                 {{ substr($department->user->name, 0, 1) }}
                                             </div>
@@ -94,12 +94,12 @@
                                         <span class="text-gray-400 text-sm">Not assigned</span>
                                     @endif
                                 </td>
-                                <td>
+                                <td class="text-center">
                                     <span class="px-2 py-1 rounded-full text-xs font-medium bg-primary/10 text-primary">
                                         {{ $department->supplies_count }} {{ Str::plural('item', $department->supplies_count) }}
                                     </span>
                                 </td>
-                                <td>
+                                <td class="text-center">
                                     <div class="text-xs text-gray-500">
                                         {{ optional($department->created_at)->format('M d, Y') }}
                                         <div class="text-gray-400">{{ $department->created_at->diffForHumans() }}</div>
@@ -117,20 +117,16 @@
                                            title="View">
                                             <i data-lucide="eye" class="w-4 h-4"></i>
                                         </a>
-                                        <form action="{{ route('departments.archive', $department) }}" method="POST" class="inline">
-                                            @csrf
-                                            @method('PUT')
-                                            <button type="button" 
-                                                    onclick="confirmArchive('{{ $department->departmentID }}', '{{ addslashes($department->officename) }}')" 
-                                                    class="btn btn-sm w-8 h-8 flex items-center justify-center p-0 mx-2" 
-                                                     style="background-color: #f59e0b; border-color: #f59e0b; color: white;"
-                                                    title="Archive">
-                                                <i data-lucide="archive" class="w-4 h-4"></i>
-                                            </button>
-                                        </form>
+                                        <button type="button" 
+                                                onclick="confirmArchive('{{ $department->departmentID }}', '{{ addslashes($department->officename) }}')" 
+                                                class="btn btn-sm w-8 h-8 flex items-center justify-center p-0 mx-2" 
+                                                style="background-color: #f59e0b; border-color: #f59e0b; color: white;"
+                                                title="Archive">
+                                            <i data-lucide="archive" class="w-4 h-4"></i>
+                                        </button>
                                     </div>
                                     <form id="archive-form-{{ $department->departmentID }}" 
-                                          action="{{ route('departments.archive', $department->departmentID) }}" 
+                                          action="{{ route('departments.archive', $department) }}" 
                                           method="POST" 
                                           class="hidden">
                                         @csrf

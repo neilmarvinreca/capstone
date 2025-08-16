@@ -26,41 +26,41 @@
                 <table class="table table-report">
                     <thead>
                         <tr>
-                            <th class="w-16">ID</th>
-                            <th class="min-w-[200px]">Item Name</th>
-                            <th>Description</th>
-                            <th>Category</th>
-                            <th>Quantity</th>
-                            <th>Status</th>
-                            <th class="w-32">Archived Date</th>
-                            <th class="w-32">Actions</th>
+                            <th class="w-16 text-center">ID</th>
+                            <th class="min-w-[200px] text-center">Item Name</th>
+                            <th class="text-center">Description</th>
+                            <th class="text-center">Category</th>
+                            <th class="text-center">Quantity</th>
+                            <th class="text-center">Status</th>
+                            <th class="w-32 text-center">Archived Date</th>
+                            <th class="w-32 text-center">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach($supplies as $supply)
                             <tr>
-                                <td>#{{ str_pad($supply->itemID, 4, '0', STR_PAD_LEFT) }}</td>
-                                <td class="whitespace-nowrap">
+                                <td class="text-center">#{{ str_pad($supply->itemID, 4, '0', STR_PAD_LEFT) }}</td>
+                                <td class="whitespace-nowrap text-center">
                                     <div class="font-medium">
                                         {{ $supply->name }}
                                     </div>
                                 </td>
-                                <td class="max-w-sm">
+                                <td class="max-w-sm text-center">
                                     <div class="text-gray-600 text-sm line-clamp-2">
                                         {{ $supply->description ?? 'No description' }}
                                     </div>
                                 </td>
-                                <td>
+                                <td class="text-center">
                                     <div class="text-sm text-gray-600">
                                         {{ $supply->category->categoryName ?? 'N/A' }}
                                     </div>
                                 </td>
-                                <td>
+                                <td class="text-center">
                                     <div class="text-sm text-gray-600">
                                         {{ $supply->quantity }} {{ $supply->unit ?? 'pcs' }}
                                     </div>
                                 </td>
-                                <td>
+                                <td class="text-center">
                                     @if($supply->quantity <= ($supply->minimum_stock ?? 5))
                                         <span class="px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
                                             Low Stock
@@ -71,7 +71,7 @@
                                         </span>
                                     @endif
                                 </td>
-                                <td>
+                                <td class="text-center">
                                     <div class="text-xs text-gray-500">
                                         {{ $supply->deleted_at->format('M d, Y') }}
                                         <div class="text-gray-400">{{ $supply->deleted_at->diffForHumans() }}</div>

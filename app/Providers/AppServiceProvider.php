@@ -2,7 +2,9 @@
 
 namespace App\Providers;
 
+use App\Models\DeployedItem;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\ServiceProvider;
 use Spatie\Activitylog\ActivityLogStatus;
@@ -32,5 +34,20 @@ class AppServiceProvider extends ServiceProvider
             app(ActivityLogStatus::class)->disable();
             Log::warning('Activity log disabled due to schema check failure: ' . $e->getMessage());
         }
+
+        // Explicit route model binding for DeployedItem
+        Route::bind('deployed_item', function ($value) {
+            return \App\Models\DeployedItem::where('deployedID', $value)->firstOrFail();
+        });
+        
+        // Also add binding for resource route parameter
+        Route::bind('deployedItem', function ($value) {
+            return \App\Models\DeployedItem::where('deployedID', $value)->firstOrFail();
+        });
+        
+        // Add binding for the archive route parameter
+        Route::bind('deployedID', function ($value) {
+            return \App\Models\DeployedItem::where('deployedID', $value)->firstOrFail();
+        });
     }
 }

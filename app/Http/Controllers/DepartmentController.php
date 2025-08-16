@@ -83,12 +83,15 @@ class DepartmentController extends Controller
             ]);
             
             return redirect()
-                ->route('departments.show', $department)
+                ->route('departments.index')
                 ->with('success', 'Department created successfully.');
                 
         } catch (\Illuminate\Validation\ValidationException $e) {
             // Re-throw validation exceptions to let Laravel handle them
-            throw $e;
+            return redirect()
+                ->back()
+                ->withErrors($e->validator)
+                ->withInput();
                 
         } catch (\Exception $e) {
             // Log the full error with trace

@@ -26,29 +26,29 @@
                 <table class="table table-report">
                     <thead>
                         <tr>
-                            <th class="w-16">ID</th>
-                            <th class="min-w-[200px]">Office Name</th>
-                            <th>Location Code</th>
-                            <th>Contact Person</th>
-                            <th>Archived Date</th>
-                            <th class="w-32">Actions</th>
+                            <th class="w-16 text-center">ID</th>
+                            <th class="min-w-[200px] text-center">Office Name</th>
+                            <th class="text-center">Location Code</th>
+                            <th class="text-center">Contact Person</th>
+                            <th class="text-center">Archived Date</th>
+                            <th class="w-32 text-center">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach($departments as $department)
                             <tr>
-                                <td>{{ $department->departmentID }}</td>
-                                <td class="whitespace-nowrap">
+                                <td class="text-center">{{ $department->departmentID }}</td>
+                                <td class="whitespace-nowrap text-center">
                                     <div class="font-medium">
                                         {{ $department->officename }}
                                     </div>
                                 </td>
-                                <td>
+                                <td class="text-center">
                                     <span class="px-2 py-1 rounded-full text-xs font-medium bg-primary/10 text-primary">
                                         {{ $department->locationcode }}
                                     </span>
                                 </td>
-                                <td>
+                                <td class="text-center">
                                     <div class="text-gray-600 text-sm">
                                         {{ $department->contactperson }}
                                         @if($department->contactnumber)
@@ -59,7 +59,7 @@
                                         @endif
                                     </div>
                                 </td>
-                                <td>
+                                <td class="text-center">
                                     <div class="text-xs text-gray-500">
                                         {{ $department->deleted_at->format('M d, Y') }}
                                         <div class="text-gray-400">{{ $department->deleted_at->diffForHumans() }}</div>

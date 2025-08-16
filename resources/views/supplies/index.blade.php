@@ -42,29 +42,6 @@
         </div>
     </div>
 
-    <!-- Department Filter -->
-    <div class="mb-6">
-        <form method="GET" action="{{ route('supplies.index') }}" class="flex items-center space-x-4">
-            <label for="department_id" class="text-sm font-medium text-gray-700">Filter by Department:</label>
-            <select name="department_id" id="department_id" class="block w-64 px-4 py-2 text-sm border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500">
-                <option value="">All Departments</option>
-                @foreach($departments as $department)
-                    <option value="{{ $department->id }}" {{ request('department_id') == $department->id ? 'selected' : '' }}>
-                        {{ $department->officename }} ({{ $department->departmentID }})
-                    </option>
-                @endforeach
-            </select>
-            <button type="submit" class="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
-                Apply
-            </button>
-            @if(request('department_id'))
-                <a href="{{ route('supplies.index', request()->except('department_id', 'page')) }}" 
-                   class="px-4 py-2 text-sm text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
-                    Clear
-                </a>
-            @endif
-        </form>
-    </div>
 
     <div class="bg-white shadow rounded-lg p-6">
         @if($supplies->isEmpty() && !request('search') && !request('department_id'))
@@ -74,22 +51,23 @@
                 <p class="text-gray-500 mb-4">Get started by adding a new supply.</p>
             </div>
         @else
-                <table class="table table-report">
+            <div class="overflow-x-auto">
+                <table class="table table-report min-w-full">
                     <thead class="bg-gray-50">
                         <tr>
                             <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-20">ID</th>
-                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[180px]">Item Name</th>
-                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[200px]">Description</th>
+                            <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[180px]">Item Name</th>
+                            <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[200px]">Description</th>
                             <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-32">Date Acquired</th>
                             <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-24">Est. Life</th>
-                            <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-24">Unit Cost</th>
+                            <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-24">Unit Cost</th>
                             <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-20">Qty</th>
-                            <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-28">Amount</th>
-                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">Category</th>
-                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">Fund Code</th>
-                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-36">PPE Sub Account</th>
-                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-28">GL Code</th>
-                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-36">Added By</th>
+                            <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-28">Amount</th>
+                            <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-32">Category</th>
+                            <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-32">Fund Code</th>
+                            <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-36">PPE Sub Account</th>
+                            <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-28">GL Code</th>
+                            <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-36">Added By</th>
                             <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-24">Status</th>
                             <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-40">Actions</th>
                         </tr>
@@ -98,19 +76,19 @@
                         @forelse($supplies as $supply)
                             <tr>
                             <td class="text-center">#{{ str_pad($supply->itemID, 4, '0', STR_PAD_LEFT) }}</td>
-                                <td class="whitespace-nowrap">
+                                <td class="whitespace-nowrap text-center">
                                     <div class="font-medium">
                                         <a href="{{ route('supplies.show', $supply) }}" class="text-primary hover:underline">
                                             {{ $supply->name }}
                                         </a>
                                     </div>
                                 </td>
-                                <td class="max-w-sm">
+                                <td class="max-w-sm text-center">
                                     <div class="text-gray-600 text-sm line-clamp-2">
                                         {{ $supply->description ?? 'No description' }}
                                     </div>
                                 </td>
-                                <td class="whitespace-nowrap">
+                                <td class="whitespace-nowrap text-center">
                                     <div class="text-sm">{{ optional($supply->acquired_at)->format('M d, Y') ?? 'N/A' }}</div>
                                 </td>
                                 <td class="text-center">
@@ -118,7 +96,7 @@
                                         {{ $supply->estimated_life ?? 'N/A' }}
                                     </span>
                                 </td>
-                                <td class="whitespace-nowrap">
+                                <td class="whitespace-nowrap text-center">
                                     <div class="text-sm">₱{{ number_format($supply->unit_cost, 2) }}</div>
                                 </td>
                                 <td class="text-center">
@@ -126,10 +104,10 @@
                                         {{ $supply->quantity }}
                                     </span>
                                 </td>
-                                <td class="font-medium">
+                                <td class="font-medium text-center">
                                     ₱{{ number_format($supply->amount, 2) }}
                                 </td>
-                                <td>
+                                <td class="text-center">
                                     @if($supply->category)
                                         <span class="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                                             {{ $supply->category->categoryName }}
@@ -138,19 +116,19 @@
                                         <span class="text-gray-400">Uncategorized</span>
                                     @endif
                                 </td>
-                                <td>
+                                <td class="text-center">
                                     <span class="text-sm text-gray-600">{{ $supply->fund_code ?? 'N/A' }}</span>
                                 </td>
-                                <td>
+                                <td class="text-center">
                                     <span class="text-sm text-gray-600">{{ $supply->pp_sub_account ?? 'N/A' }}</span>
                                 </td>
-                                <td>
+                                <td class="text-center">
                                     <span class="text-sm text-gray-600">{{ $supply->gl_code ?? 'N/A' }}</span>
                                 </td>
-                                <td>
+                                <td class="text-center">
                                     <span class="text-sm text-gray-600">{{ $supply->addedBy->name ?? 'System' }}</span>
                                 </td>
-                                <td>
+                                <td class="text-center">
                                     @if($supply->quantity <= ($supply->minimum_stock ?? 5))
                                         <span class="px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
                                             Low Stock
@@ -162,7 +140,7 @@
                                     @endif
                                 </td>
                                 <td class="text-center">
-                                    <div class="flex justify-start space-x-2">
+                                    <div class="flex justify-center space-x-2">
                                         <a href="{{ route('supplies.edit', $supply) }}" class="btn btn-sm btn-primary w-8 h-8 flex items-center justify-center p-0 mx-2" title="Edit">
                                             <i data-lucide="edit" class="w-4 h-4"></i>
                                         </a>
@@ -185,7 +163,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="10" class="text-center py-8">
+                                <td colspan="15" class="text-center py-8">
                                     <i data-lucide="search-x" class="w-12 h-12 mx-auto text-gray-400"></i>
                                     <p class="mt-2 text-gray-500">No supplies found matching your search.</p>
                                     <a href="{{ route('supplies.index') }}" class="btn btn-outline-secondary mt-4">

@@ -53,41 +53,41 @@
                 <table class="table table-report">
                     <thead>
                         <tr>
-                            <th class="w-16">ID</th>
-                            <th class="min-w-[250px]">Category Name</th>
-                            <th>Description</th>
-                            <th class="w-24">Supplies</th>
-                            <th class="w-32">Created</th>
-                            <th class="w-32">Actions</th>
+                            <th class="w-16 text-center">ID</th>
+                            <th class="min-w-[250px] text-center">Category Name</th>
+                            <th class="text-center">Description</th>
+                            <th class="w-24 text-center">Supplies</th>
+                            <th class="w-32 text-center">Created</th>
+                            <th class="w-32 text-center">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         @forelse($categories as $category)
                             <tr>
-                                <td>{{ $category->categoryID ?? $category->id }}</td>
-                                <td class="whitespace-nowrap">
+                                <td class="text-center">{{ $category->categoryID ?? $category->id }}</td>
+                                <td class="whitespace-nowrap text-center">
                                     <div class="font-medium">
                                         {{ $category->categoryName }}
                                     </div>
                                 </td>
-                                <td class="max-w-sm">
+                                <td class="max-w-sm text-center">
                                     <div class="text-gray-600 text-sm line-clamp-2">
                                         {{ $category->description ?? 'No description' }}
                                     </div>
                                 </td>
-                                <td>
+                                <td class="text-center">
                                     <span class="px-2 py-1 rounded-full text-xs font-medium bg-primary/10 text-primary">
                                         {{ $category->supplies_count }} {{ Str::plural('item', $category->supplies_count) }}
                                     </span>
                                 </td>
-                                <td>
+                                <td class="text-center">
                                     <div class="text-xs text-gray-500">
                                         {{ optional($category->created_at)->format('M d, Y') }}
                                         <div class="text-gray-400">{{ $category->created_at->diffForHumans() }}</div>
                                     </div>
                                 </td>
-                                <td>
-                                    <div class="flex space-x-3">
+                                <td class="text-center">
+                                    <div class="flex justify-center space-x-3">
                                         <a href="{{ route('categories.edit', $category) }}" class="btn btn-sm btn-primary w-8 h-8 flex items-center justify-center p-0 mx-2">
                                             <i data-lucide="edit" class="w-4 h-4"></i>
                                         </a>

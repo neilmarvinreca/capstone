@@ -25,17 +25,7 @@ class SupplyController extends Controller
         $query = Supply::query();
         
         // Eager load relationships
-        $query->with(['category', 'department']);
-        
-        // Get departments for the filter
-        $departments = \App\Models\Department::orderBy('officename')->get();
-        
-        // Apply department filter if provided
-        if ($request->filled('department_id')) {
-            $query->whereHas('department', function($q) use ($request) {
-                $q->where('departmentID', $request->department_id);
-            });
-        }
+        $query->with(['category']);
         
         // Apply search filter if provided
         if ($request->filled('search')) {
@@ -60,7 +50,7 @@ class SupplyController extends Controller
             'supplies_total' => $supplies->total()
         ]);
         
-        return view('supplies.index', compact('supplies', 'departments'));
+        return view('supplies.index', compact('supplies'));
     }
 
     /**
@@ -105,14 +95,13 @@ class SupplyController extends Controller
         ]);
     }
     
-    /**
+    /**assss
      * Show the form for creating a new resource.
      */
     public function create()
     {
         $categories = Category::orderBy('categoryName')->get();
-        $departments = Department::orderBy('officename')->get();
-        return view('supplies.create', compact('categories', 'departments'));
+        return view('supplies.create', compact('categories'));
     }
 
     /**
@@ -125,21 +114,31 @@ class SupplyController extends Controller
             'description' => 'nullable|string',
             'acquired_at' => 'required|date',
             'estimated_life' => 'nullable|string',
-            'added_by' => 'required|exists:users,id',
             'unit_cost' => 'required|numeric',
             'category_id' => 'required|exists:categories,categoryID',
             'quantity' => 'required|integer|min:0',
+            'minimum_stock' => 'required|integer|min:0',
             'amount' => 'required|numeric|min:0',
             'fund_code' => 'required|string|max:255',
             'pp_sub_account' => 'required|string|max:255',
             'gl_code' => 'required|string|max:255',
         ]);
+
+        // Set the added_by field to the current authenticated user
+        $validated['added_by'] = auth()->id();
         
-        $supply = Supply::create($validated);
-        
-        return redirect()
-            ->route('supplies.index')
-            ->with('success', 'Supply created successfully.');
+        try {
+            $supply = Supply::create($validated);
+            
+            return redirect()
+                ->route('supplies.index')
+                ->with('success', 'Supply created successfully.');
+        } catch (\Exception $e) {
+            return redirect()
+                ->back()
+                ->withInput()
+                ->with('error', 'An error occurred while creating the supply. Please try again.');
+        }
     }
 
     /**
@@ -157,8 +156,7 @@ class SupplyController extends Controller
     public function edit(Supply $supply)
     {
         $categories = Category::orderBy('categoryName')->get();
-        $departments = Department::orderBy('officename')->get();
-        return view('supplies.edit', compact('supply', 'categories', 'departments'));
+        return view('supplies.edit', compact('supply', 'categories'));
     }
 
     /**
@@ -173,9 +171,9 @@ class SupplyController extends Controller
             'estimated_life' => 'nullable|string',
             'unit_cost' => 'required|numeric|min:0',
             'quantity' => 'required|integer|min:0',
+            'minimum_stock' => 'required|integer|min:0',
             'amount' => 'required|numeric|min:0',
             'category_id' => 'required|exists:categories,categoryID',
-            // 'department_id' removed from update validation
             'fund_code' => 'required|string|max:255',
             'pp_sub_account' => 'required|string|max:255',
             'gl_code' => 'required|string|max:255',

@@ -19,6 +19,7 @@ class Supply extends Model
         'estimated_life',
         'unit_cost',
         'quantity',
+        'minimum_stock',
         'amount',
         'category_id',
         'fund_code',
@@ -60,14 +61,10 @@ class Supply extends Model
 
     /**
      * Check if the supply is low on stock.
-     * Note: This is a placeholder method since minimum_stock was removed.
-     * You may want to implement custom low stock logic based on your business requirements.
      */
     public function isLowStock(): bool
     {
-        // Default to false since we don't have minimum stock levels anymore
-        // You can implement custom logic here if needed
-        return false;
+        return $this->quantity <= $this->minimum_stock;
     }
 
     /**

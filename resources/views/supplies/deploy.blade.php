@@ -255,8 +255,7 @@
                 <i data-lucide="save" class="w-4 h-4 mr-2"></i> Deploy Item
             </button>
         </div>
-            </div>
-        </form>
+    </form>
     </div>
 </div>
 

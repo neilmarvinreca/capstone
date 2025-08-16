@@ -21,24 +21,45 @@ class DeployedItemController extends Controller
      */
     public function index(Request $request)
     {
+        $user = Auth::user();
         $search = $request->input('search');
         
-        $deployedItems = DeployedItem::with(['department', 'supply', 'activities.causer'])
-            ->when($search, function($query) use ($search) {
-                return $query->whereHas('supply', function($q) use ($search) {
-                    $q->where('name', 'like', "%{$search}%");
-                });
-            })
-            ->latest()
-            ->paginate(10)
-            ->withQueryString();
+        // Start building the query
+        $query = DeployedItem::with(['department', 'supply', 'activities.causer']);
+        
+        // Apply department filter for Department Users
+        if ($user->role === 'Department User' && $user->department_id) {
+            $query->where('department_id', $user->department_id);
+        }
+        
+        // Apply search filters
+        if ($search) {
+            $query->where(function($q) use ($search) {
+                $q->where('itemName', 'like', "%{$search}%")
+                  ->orWhere('itemDescription', 'like', "%{$search}%")
+                  ->orWhere('itemCategory', 'like', "%{$search}%")
+                  ->orWhere('deployedID', 'like', "%{$search}%")
+                  ->orWhereHas('department', function($q) use ($search) {
+                      $q->where('officename', 'like', "%{$search}%")
+                        ->orWhere('departmentID', 'like', "%{$search}%");
+                  })
+                  ->orWhereHas('supply', function($q) use ($search) {
+                      $q->where('name', 'like', "%{$search}%");
+                  });
+            });
+        }
+        
+        // Get the results
+        $deployedItems = $query->latest()
+                             ->paginate(10)
+                             ->withQueryString();
             
         // Get summary statistics
         $totalDeployed = DeployedItem::count();
         $totalValue = DeployedItem::sum('cost');
-        $byDepartment = DeployedItem::selectRaw('department_id, count(*) as count, sum(cost) as total_value')
+        $byDepartment = DeployedItem::selectRaw('departmentID, count(*) as count, sum(cost) as total_value')
             ->with('department')
-            ->groupBy('department_id')
+            ->groupBy('departmentID')
             ->get();
             
         $recentDeployments = DeployedItem::with(['department', 'supply'])
@@ -222,8 +243,13 @@ class DeployedItemController extends Controller
                     'qr_code' => 'DP-' . strtoupper(Str::random(10)),
                 ]);
                 
-                // Update supply quantity
+                // Update supply quantity and recalculate amount
                 $supply->decrement('quantity', $item['quantity']);
+                
+                // Recalculate and update the total amount based on remaining quantity
+                $supply->update([
+                    'amount' => $supply->unit_cost * $supply->quantity
+                ]);
                 
                 // Log the deployment
                 activity()
@@ -233,9 +259,10 @@ class DeployedItemController extends Controller
                         'supply_id' => $supply->id,
                         'quantity' => $item['quantity'],
                         'department_id' => $department->id,
-
+                        'remaining_quantity' => $supply->quantity,
+                        'updated_amount' => $supply->amount
                     ])
-                    ->log('Deployed from bulk supply');
+                    ->log('Deployed from bulk supply and updated total amount');
                 
                 $deployedItems[] = $deployedItem;
             }
@@ -275,6 +302,8 @@ class DeployedItemController extends Controller
         // Build attributes using available column names (supports camelCase or snake_case)
         $table = 'deployed_items';
         $attrs = [];
+        // Set the deployedID from the form
+        $attrs['deployedID'] = $request->deployedID;
         $attrs[Schema::hasColumn($table, 'itemName') ? 'itemName' : (Schema::hasColumn($table, 'item_name') ? 'item_name' : 'itemName')] = $supply->name;
         $attrs[Schema::hasColumn($table, 'itemDescription') ? 'itemDescription' : (Schema::hasColumn($table, 'item_description') ? 'item_description' : 'itemDescription')] = $supply->description;
         $attrs[Schema::hasColumn($table, 'dateAcquired') ? 'dateAcquired' : (Schema::hasColumn($table, 'date_acquired') ? 'date_acquired' : 'dateAcquired')] = now();
@@ -309,8 +338,13 @@ class DeployedItemController extends Controller
 
         $deployedItem = DeployedItem::create($attrs);
         
-        // Update the supply quantity
+        // Update the supply quantity and recalculate amount
         $supply->decrement('quantity', $request->quantity);
+        
+        // Recalculate and update the total amount based on remaining quantity
+        $supply->update([
+            'amount' => $supply->unit_cost * $supply->quantity
+        ]);
         
         // Log the deployment
         activity()
@@ -319,9 +353,11 @@ class DeployedItemController extends Controller
             ->withProperties([
                 'supply_id' => $supply->itemID,
                 'quantity' => $request->quantity,
-                'departmentID' => $request->departmentID
+                'departmentID' => $request->departmentID,
+                'remaining_quantity' => $supply->quantity,
+                'updated_amount' => $supply->amount
             ])
-            ->log('Deployed from supply');
+            ->log('Deployed from supply and updated total amount');
             
         return redirect()->route('deployed-items.index')
             ->with('success', 'Item deployed successfully!');
@@ -378,14 +414,22 @@ class DeployedItemController extends Controller
             'cost' => 'required|numeric|min:0',
             'quantity' => 'required|integer|min:1',
             'itemCategory' => 'required|string|max:255',
-            'qr_code' => 'required|string|max:255|unique:deployed_items,qr_code,' . $deployedItem->deployedID . ',deployedID',
+            'qrCode' => 'required|string|max:255|unique:deployed_items,qrCode,' . $deployedItem->deployedID . ',deployedID',
             'departmentID' => 'required|exists:departments,departmentID',
             'dateDeployed' => 'required|date',
             'status' => 'required|in:active,inactive,maintenance,retired',
             'remarks' => 'nullable|string',
-            'condition' => 'required|in:new,good,fair,poor',
+            'condition' => 'required|in:excellent,good,fair,poor',
             'purpose' => 'nullable|string',
         ]);
+
+        // Format dates properly
+        if (isset($validated['dateAcquired'])) {
+            $validated['dateAcquired'] = \Carbon\Carbon::parse($validated['dateAcquired'])->format('Y-m-d');
+        }
+        if (isset($validated['dateDeployed'])) {
+            $validated['dateDeployed'] = \Carbon\Carbon::parse($validated['dateDeployed'])->format('Y-m-d');
+        }
 
         try {
             // Store old values for activity log
@@ -450,30 +494,42 @@ class DeployedItemController extends Controller
      * @param  string  $id  The deployedID of the item to archive
      * @return \Illuminate\Http\Response
      */
-    public function archive($id)
+    /**
+     * Archive the specified deployed item.
+     *
+     * @param  string  $deployedID  The deployedID of the item to archive
+     * @return \Illuminate\Http\Response
+     */
+    public function archive($deployedID)
     {
-        $deployedItem = DeployedItem::where('deployedID', $id)->firstOrFail();
-        
-        // Check if the item is already archived
-        if ($deployedItem->trashed()) {
-            return redirect()->route('deployed-items.index')
-                ->with('error', 'Item is already archived.');
-        }
-        
         try {
+            $deployedItem = DeployedItem::where('deployedID', $deployedID)->firstOrFail();
+            
+            // Check if the item is already archived
+            if ($deployedItem->trashed()) {
+                return back()->with('error', 'Item is already archived.');
+            }
+            
+            // Soft delete the item
             $deployedItem->delete();
+            
+            // Log the archive activity
+            activity()
+                ->causedBy(auth()->user())
+                ->performedOn($deployedItem)
+                ->log('archived');
             
             return redirect()->route('deployed-items.index')
                 ->with('success', 'Item has been archived successfully.');
                 
         } catch (\Exception $e) {
             \Log::error('Error archiving deployed item', [
-                'id' => $id,
+                'deployedID' => $deployedID,
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
             
-            return back()->with('error', 'Failed to archive item. Please try again.');
+            return back()->with('error', 'Failed to archive item: ' . $e->getMessage());
         }
     }
 

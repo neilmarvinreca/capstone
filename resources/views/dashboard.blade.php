@@ -26,7 +26,7 @@
     <!-- BEGIN: Descriptive Analytics -->
     <div class="col-span-12">
         <div class="intro-y flex items-center h-10 mb-5">
-            <h2 class="text-2xl font-medium truncate mr-5">Descriptive Analytics</h2>
+            <h2 class="text-2xl font-medium truncate mr-5">Descriptive Data Analytics</h2>
         </div>
         <div class="grid grid-cols-12 gap-6">
             <!-- Inventory Items per Department (Total Quantity) -->
