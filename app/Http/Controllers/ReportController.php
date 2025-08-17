@@ -25,7 +25,7 @@ class ReportController extends Controller
     public function inventory(Request $request)
     {
         $departments = \App\Models\Department::orderBy('officename')->get();
-        $query = Supply::with(['category', 'department']);
+        $query = Supply::with(['category', 'department', 'addedBy']);
         if ($request->filled('department_id')) {
             $query->where('department_id', $request->department_id);
         }
@@ -39,10 +39,10 @@ class ReportController extends Controller
     public function deployedItems(Request $request)
     {
         $departments = \App\Models\Department::orderBy('officename')->get();
-        $query = DeployedItem::with('department');
+        $query = DeployedItem::with('deployedBy');
         
         if ($request->filled('department_id')) {
-            $query->where('department_id', $request->department_id);
+            $query->where('departmentID', $request->department_id);
         }
         
         // Filter by date range if provided
@@ -65,7 +65,7 @@ class ReportController extends Controller
     {
         $departments = \App\Models\Department::orderBy('officename')->get();
         $query = Supply::where('quantity', '<=', 5) // Using 5 as a general threshold
-            ->with(['category', 'department']);
+            ->with(['category', 'department.user']);
             
         if ($request->filled('department_id')) {
             $query->where('department_id', $request->department_id);
@@ -97,50 +97,47 @@ class ReportController extends Controller
      */
     private function exportInventory($request)
     {
-        $query = Supply::with(['category', 'department'])->orderBy('name');
+        $query = Supply::with(['category', 'addedBy'])->orderBy('name');
         if ($request->filled('department_id')) {
             $query->where('department_id', $request->department_id);
         }
         $supplies = $query->get()->map(function ($supply) {
             return [
-                'Category' => $supply->category->name,
-                'Department' => $supply->department ? $supply->department->officename . ' (' . $supply->department->departmentID . ')' : '',
-                'Name' => $supply->name,
+                'Item Name' => $supply->name,
+                'Description' => $supply->description ?? 'N/A',
+                'Category' => $supply->category->categoryName ?? 'N/A',
+                'Unit Cost' => '₱' . number_format($supply->unit_cost ?? 0, 2),
                 'Quantity' => $supply->quantity,
-                'Unit' => $supply->unit,
-                'Unit Cost' => $supply->unit_cost,
-                'Total Value' => $supply->getTotalValue(),
-                'Location' => $supply->location,
-                'Supplier' => $supply->supplier,
+                'Amount' => '₱' . number_format(($supply->unit_cost ?? 0) * $supply->quantity, 2),
+                'Added By' => $supply->addedBy ? $supply->addedBy->name : 'N/A',
+                'Status' => $supply->quantity <= 5 ? 'Low Stock' : 'In Stock',
             ];
         });
         return $this->generateCsv('inventory.csv', $supplies);
     }
 
     /**
-     * Export transactions report to CSV.
+     * Export deployed items report to CSV.
      */
-    private function exportTransactions($request)
+    private function exportDeployedItems($request)
     {
-        $query = Transaction::with(['supply.department', 'user'])->latest();
+        $query = DeployedItem::with('deployedBy')->orderBy('itemName');
         if ($request->filled('department_id')) {
-            $query->whereHas('supply', function ($q) use ($request) {
-                $q->where('department_id', $request->department_id);
-            });
+            $query->where('departmentID', $request->department_id);
         }
-        $transactions = $query->get()->map(function ($transaction) {
+        $deployedItems = $query->get()->map(function ($item) {
             return [
-                'Date' => $transaction->created_at->format('Y-m-d H:i:s'),
-                'Supply' => $transaction->supply->name ?? '',
-                'Department' => $transaction->supply && $transaction->supply->department ? $transaction->supply->department->officename . ' (' . $transaction->supply->department->departmentID . ')' : '',
-                'Type' => ucfirst($transaction->type),
-                'Quantity' => $transaction->quantity,
-                'Unit' => $transaction->supply->unit ?? '',
-                'User' => $transaction->user->name,
-                'Remarks' => $transaction->remarks,
+                'Item Name' => $item->itemName ?? 'N/A',
+                'Category' => $item->itemCategory ?? 'N/A',
+                'Unit Cost' => '₱' . number_format($item->cost ?? 0, 2),
+                'Quantity' => $item->quantity ?? 1,
+                'Amount' => '₱' . number_format(($item->cost ?? 0) * ($item->quantity ?? 1), 2),
+                'Date Deployed' => optional($item->dateDeployed)->format('Y-m-d') ?? 'N/A',
+                'Status' => ucfirst($item->status ?? 'N/A'),
+                'Added By' => $item->deployedBy ? $item->deployedBy->name : 'N/A',
             ];
         });
-        return $this->generateCsv('transactions.csv', $transactions);
+        return $this->generateCsv('deployed-items.csv', $deployedItems);
     }
 
     /**
@@ -150,7 +147,7 @@ class ReportController extends Controller
     private function exportLowStock($request)
     {
         $query = Supply::where('quantity', '<=', 5) // Using 5 as a general threshold
-            ->with(['category', 'department']);
+            ->with(['category', 'department.user']);
             
         if ($request->filled('department_id')) {
             $query->where('department_id', $request->department_id);
@@ -158,12 +155,13 @@ class ReportController extends Controller
         
         $supplies = $query->get()->map(function ($supply) {
             return [
-                'Category' => $supply->category->name,
-                'Department' => $supply->department ? $supply->department->officename . ' (' . $supply->department->departmentID . ')' : '',
+                'Category' => $supply->category->categoryName ?? 'N/A',
+                'Department' => $supply->department ? $supply->department->officename . ' (' . $supply->department->departmentID . ')' : 'N/A',
                 'Name' => $supply->name,
                 'Current Stock' => $supply->quantity,
-                'Status' => $supply->quantity <= 5 ? 'Low Stock' : 'In Stock',
-                // Removed unit, supplier, and supplier_contact as they were deleted fields
+                'Minimum Quantity' => 5,
+                'Status' => 'Low Stock',
+                'Accountable Person' => $supply->department && $supply->department->user ? $supply->department->user->name : 'N/A',
             ];
         });
         

@@ -33,7 +33,7 @@
             <div class="col-span-12 md:col-span-6 lg:col-span-6 intro-y">
                 <div class="intro-y box p-5 h-full">
                     <div class="flex items-center justify-center border-b border-slate-200/60 dark:border-darkmode-400 pb-5 mb-5">
-                        <h2 class="font-medium text-base text-center">Items in Stock per Department</h2>
+                        <h2 class="font-medium text-base text-center">Items per Department</h2>
                     </div>
                     <canvas id="deptQuantityBarChart" style="width: 100%; max-width: 560px; height: 340px; margin: 0 auto;"></canvas>
                 </div>
@@ -43,7 +43,7 @@
             <div class="col-span-12 md:col-span-6 lg:col-span-6 intro-y">
                 <div class="intro-y box p-5 h-full">
                     <div class="flex items-center justify-center border-b border-slate-200/60 dark:border-darkmode-400 pb-5 mb-5">
-                        <h2 class="font-medium text-base text-center">Number of Item Types per Department</h2>
+                        <h2 class="font-medium text-base text-center">Deployed Item Types per Department</h2>
                     </div>
                     <canvas id="deptItemCountBarChart" style="width: 100%; max-width: 560px; height: 340px; margin: 0 auto;"></canvas>
                 </div>
@@ -244,15 +244,15 @@
             const supplies = @json($supplyAnalytics['supplies']);
 
             const departmentNames = departments.map(d => d.officename);
-            const departmentQuantities = departments.map(d => (d.supplies || []).reduce((sum, s) => sum + (Number(s.quantity) || 0), 0));
-            const departmentItemCounts = departments.map(d => (d.supplies || []).length);
+            const departmentQuantities = departments.map(d => (d.deployedItems || []).reduce((sum, item) => sum + (Number(item.quantity) || 1), 0));
+            const departmentItemCounts = departments.map(d => (d.deployedItems || []).length);
 
             // Department Quantity (Bar)
             const deptQtyCtx = document.getElementById('deptQuantityBarChart').getContext('2d');
             const deptQtyData = {
                 labels: departmentNames,
                 datasets: [{
-                    label: 'Items in Stock',
+                    label: 'Deployed Items',
                     data: departmentQuantities,
                     backgroundColor: 'rgba(59, 130, 246, 0.6)',
                     borderColor: 'rgba(59, 130, 246, 1)',
@@ -265,7 +265,10 @@
                 responsive: true,
                 plugins: { legend: { display: false } },
                 scales: {
-                    y: { beginAtZero: true }
+                    y: { 
+                        beginAtZero: true,
+                        title: { display: true, text: 'Quantity' }
+                    }
                 }
             };
             new Chart(deptQtyCtx, { type: 'bar', data: deptQtyData, options: deptQtyOptions });
@@ -277,7 +280,7 @@
                 data: {
                     labels: departmentNames,
                     datasets: [{
-                        label: 'Distinct Item Types',
+                        label: 'Deployed Item Types',
                         data: departmentItemCounts,
                         backgroundColor: 'rgba(16, 185, 129, 0.6)',
                         borderColor: 'rgba(16, 185, 129, 1)',
@@ -288,7 +291,12 @@
                     responsive: true,
                     indexAxis: 'y',
                     plugins: { legend: { display: false } },
-                    scales: { x: { beginAtZero: true } }
+                    scales: { 
+                        x: { 
+                            beginAtZero: true,
+                            title: { display: true, text: 'Count' }
+                        } 
+                    }
                 }
             });
 

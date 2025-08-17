@@ -46,9 +46,9 @@ class DashboardController extends Controller
         // Calendar events
         $calendarEvents = collect();
 
-        // Get all departments with their supplies for department-based analytics
-        $departments = Department::with(['supplies' => function($query) {
-            $query->select('department_id', 'quantity', 'unit_cost', 'itemID');
+        // Get all departments with their deployed items for department-based analytics
+        $departments = Department::with(['deployedItems' => function($query) {
+            $query->select('deployedID', 'departmentID', 'quantity', 'supply_id');
         }])->get();
 
         // Get all supplies for fund code distribution
@@ -65,16 +65,16 @@ class DashboardController extends Controller
             'lowStockCount' => $lowStockCount,
             'outOfStockCount' => Supply::where('quantity', 0)->count(),
             
-            // Department Data with Supplies
+            // Department Data with Deployed Items
             'departments' => $departments->map(function($dept) {
                 return (object)[
-                    'id' => $dept->id,
+                    'id' => $dept->departmentID,
                     'officename' => $dept->officename,
-                    'supplies' => $dept->supplies->map(function($supply) {
+                    'deployedItems' => $dept->deployedItems->map(function($item) {
                         return (object)[
-                            'quantity' => $supply->quantity,
-                            'price' => $supply->unit_cost,
-                            'value' => $supply->quantity * $supply->unit_cost
+                            'quantity' => $item->quantity ?? 1,
+                            'deployedID' => $item->deployedID,
+                            'supply_id' => $item->supply_id
                         ];
                     })
                 ];

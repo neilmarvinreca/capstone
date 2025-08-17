@@ -25,7 +25,7 @@
         <select name="department_id" id="department_id" class="form-select w-auto" onchange="this.form.submit()">
             <option value="">All Departments</option>
             @foreach($departments as $department)
-                <option value="{{ $department->id }}" {{ request('department_id') == $department->id ? 'selected' : '' }}>
+                <option value="{{ $department->departmentID }}" {{ request('department_id') == $department->departmentID ? 'selected' : '' }}>
                     {{ $department->officename }} ({{ $department->departmentID }})
                 </option>
             @endforeach
@@ -39,29 +39,33 @@
         <table class="table table-report -mt-2">
             <thead>
                 <tr>
-                    <th class="whitespace-nowrap">Item Name</th>
-                    <th class="whitespace-nowrap">Category</th>
-                    <th class="whitespace-nowrap">Department</th>
-                    <th class="whitespace-nowrap">Current Stock</th>
-                    <th class="whitespace-nowrap">Unit</th>
-                    <th class="whitespace-nowrap">Status</th>
+                    <th class="whitespace-nowrap text-center">Item Name</th>
+                    <th class="whitespace-nowrap text-center">Description</th>
+                    <th class="whitespace-nowrap text-center">Category</th>
+                    <th class="whitespace-nowrap text-center">Unit Cost</th>
+                    <th class="whitespace-nowrap text-center">Quantity</th>
+                    <th class="whitespace-nowrap text-center">Amount</th>
+                    <th class="whitespace-nowrap text-center">Added By</th>
+                    <th class="whitespace-nowrap text-center">Status</th>
                 </tr>
             </thead>
             <tbody>
                 @forelse($supplies as $supply)
                     <tr class="intro-x">
-                        <td>{{ $supply->name }}</td>
-                        <td>{{ $supply->category->name }}</td>
-                        <td>{{ $supply->department ? $supply->department->officename . ' (' . $supply->department->departmentID . ')' : 'N/A' }}</td>
-                        <td>{{ $supply->quantity }}</td>
-                        <td>{{ $supply->unit }}</td>
-                        <td>
-                            @if($supply->quantity <= $supply->minimum_quantity)
-                                <div class="flex items-center text-danger">
+                        <td class="text-center">{{ $supply->name }}</td>
+                        <td class="text-center">{{ $supply->description ?? 'N/A' }}</td>
+                        <td class="text-center">{{ $supply->category->categoryName ?? 'N/A' }}</td>
+                        <td class="text-center">₱{{ number_format($supply->unit_cost ?? 0, 2) }}</td>
+                        <td class="text-center">{{ $supply->quantity }}</td>
+                        <td class="text-center">₱{{ number_format(($supply->unit_cost ?? 0) * $supply->quantity, 2) }}</td>
+                        <td class="text-center">{{ $supply->addedBy ? $supply->addedBy->name : 'N/A' }}</td>
+                        <td class="text-center">
+                            @if($supply->quantity <= 5)
+                                <div class="flex items-center justify-center text-danger">
                                     <i data-lucide="alert-circle" class="w-4 h-4 mr-1"></i> Low Stock
                                 </div>
                             @else
-                                <div class="flex items-center text-success">
+                                <div class="flex items-center justify-center text-success">
                                     <i data-lucide="check-circle" class="w-4 h-4 mr-1"></i> In Stock
                                 </div>
                             @endif
@@ -69,7 +73,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="5" class="text-center">No supplies found.</td>
+                        <td colspan="8" class="text-center">No supplies found.</td>
                     </tr>
                 @endforelse
             </tbody>

@@ -57,7 +57,7 @@
                             <th class="min-w-[200px] text-center">Department</th>
                             <th class="text-center">Location Code</th>
                             <th class="text-center">Accountable Person</th>
-                            <th class="w-24 text-center">Supplies</th>
+                            <th class="w-24 text-center">Deployed Items</th>
                             <th class="w-32 text-center">Created</th>
                             <th class="w-32 text-center">Actions</th>
                         </tr>
@@ -96,7 +96,7 @@
                                 </td>
                                 <td class="text-center">
                                     <span class="px-2 py-1 rounded-full text-xs font-medium bg-primary/10 text-primary">
-                                        {{ $department->supplies_count }} {{ Str::plural('item', $department->supplies_count) }}
+                                        {{ $department->deployed_items_count }} {{ Str::plural('item', $department->deployed_items_count) }}
                                     </span>
                                 </td>
                                 <td class="text-center">

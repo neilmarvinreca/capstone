@@ -45,7 +45,7 @@
                 <h3 class="text-gray-600 dark:text-gray-400 font-medium">Statistics</h3>
                 <div class="mt-2">
                     <span class="px-3 py-1 rounded-full text-sm font-medium bg-primary/10 text-primary">
-                        {{ $department->supplies_count ?? 0 }} {{ Str::plural('item', $department->supplies_count ?? 0) }} in this department
+                        {{ $department->deployed_items_count ?? 0 }} {{ Str::plural('item', $department->deployed_items_count ?? 0) }} deployed in this department
                     </span>
                 </div>
                 <div class="mt-2 text-sm text-gray-600 dark:text-gray-400">
@@ -62,27 +62,29 @@
 </div>
 <!-- END: Department Details -->
 
-<!-- Department Supplies -->
-@if(isset($department->supplies) && $department->supplies->count() > 0)
+<!-- Department Deployed Items -->
+@if(isset($department->deployedItems) && $department->deployedItems->count() > 0)
 <div class="intro-y box p-5 mt-5">
-    <h3 class="text-lg font-medium mb-4">Department Supplies</h3>
+    <h3 class="text-lg font-medium mb-4">Deployed Items in Department</h3>
     <div class="overflow-x-auto">
         <table class="table table-report">
             <thead>
                 <tr>
-                    <th>Item ID</th>
-                    <th>Name</th>
-                    <th>Quantity</th>
+                    <th>Item Name</th>
+                    <th>Description</th>
+                    <th>Date Deployed</th>
                     <th>Status</th>
+                    <th>Quantity</th>
                 </tr>
             </thead>
             <tbody>
-                @foreach($department->supplies as $supply)
+                @foreach($department->deployedItems as $item)
                 <tr>
-                    <td>{{ $supply->itemID ?? 'N/A' }}</td>
-                    <td>{{ $supply->name ?? 'N/A' }}</td>
-                    <td>{{ $supply->quantity ?? '0' }}</td>
-                    <td>{{ $supply->status ?? 'N/A' }}</td>
+                    <td>{{ $item->itemName ?? 'N/A' }}</td>
+                    <td>{{ $item->itemDescription ?? 'N/A' }}</td>
+                    <td>{{ $item->dateDeployed ? $item->dateDeployed->format('M d, Y') : 'N/A' }}</td>
+                    <td>{{ $item->status ?? 'N/A' }}</td>
+                    <td>{{ $item->quantity ?? '1' }}</td>
                 </tr>
                 @endforeach
             </tbody>

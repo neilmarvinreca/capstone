@@ -2,12 +2,30 @@
 
 @section('title', 'Deployed Item Details')
 
+@push('styles')
+<style>
+    .qr-code-image {
+        width: 128px;
+        height: 128px;
+        object-fit: contain;
+        border: 1px solid #e2e8f0;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: transform 0.2s ease;
+    }
+    
+    .qr-code-image:hover {
+        transform: scale(1.05);
+    }
+</style>
+@endpush
+
 @section('content')
 <div class="mt-8">
     <div class="intro-y flex flex-col sm:flex-row items-center mt-8">
         <h2 class="text-lg font-medium mr-auto">Deployed Item Details</h2>
         <div class="w-full sm:w-auto flex mt-4 sm:mt-0">
-            <button type="button" class="btn btn-secondary" onclick="showQRCode('{{ $deployedItem->qrCode }}')">
+            <button type="button" class="btn btn-secondary" onclick="showQRCodeModal()">
                 <i data-lucide="qrcode" class="w-4 h-4 mr-2"></i> Show QR Code
             </button>
             <a href="{{ route('deployed-items.index') }}" class="btn btn-outline-secondary ml-2">
@@ -66,7 +84,18 @@
                         <div class="font-mono text-xs bg-slate-100 dark:bg-darkmode-800 p-2 rounded inline-block">{{ $deployedItem->qrCode }}</div>
                         @if($deployedItem->qr_code_image)
                             <div class="mt-2">
-                                <img src="{{ $deployedItem->qr_code_image_url }}" alt="QR Code" class="w-32 h-32 border rounded">
+                                <img src="{{ $deployedItem->qr_code_image_url }}" 
+                                     alt="QR Code" 
+                                     class="qr-code-image cursor-pointer" 
+                                     onclick="showQRCodeModal()" 
+                                     title="Click to view larger"
+                                     onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                                <div class="hidden mt-2">
+                                    <div class="text-sm text-red-500 mb-2">QR Code image not found in storage</div>
+                                    <button type="button" class="btn btn-sm btn-primary" onclick="generateQrCodeImage()">
+                                        <i data-lucide="refresh-cw" class="w-4 h-4 mr-2"></i> Regenerate QR Image
+                                    </button>
+                                </div>
                             </div>
                         @else
                             <div class="mt-2">
@@ -178,21 +207,6 @@
         </div>
         @endif
 
-        <!-- QR Code Modal -->
-        <div class="modal" id="qr-modal">
-            <div class="modal__content">
-                <div class="p-5 text-center">
-                    <div id="qrcode" class="mx-auto"></div>
-                    <div class="mt-4">
-                        <button type="button" class="btn btn-secondary mt-3" onclick="closeModal()">Close</button>
-                        <button type="button" class="btn btn-primary mt-3" onclick="printQRCode()">
-                            <i data-lucide="printer" class="w-4 h-4 mr-2"></i> Print
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
         @push('scripts')
         <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
         <script>
@@ -214,10 +228,24 @@
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
+                        // Show success message
+                        Swal.fire({
+                            title: 'Success!',
+                            text: 'QR Code image generated successfully',
+                            icon: 'success',
+                            timer: 2000,
+                            showConfirmButton: false
+                        });
                         // Reload the page to show the new QR code image
-                        window.location.reload();
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 2000);
                     } else {
-                        alert('Failed to generate QR code image: ' + data.message);
+                        Swal.fire({
+                            title: 'Error!',
+                            text: 'Failed to generate QR code image: ' + data.message,
+                            icon: 'error'
+                        });
                         // Reset button
                         button.innerHTML = originalText;
                         button.disabled = false;
@@ -225,37 +253,108 @@
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    alert('Failed to generate QR code image. Please try again.');
+                    Swal.fire({
+                        title: 'Error!',
+                        text: 'Failed to generate QR code image. Please try again.',
+                        icon: 'error'
+                    });
                     // Reset button
                     button.innerHTML = originalText;
                     button.disabled = false;
                 });
             }
 
-            function showQRCode(qrData) {
+            function showQRCodeModal() {
                 // Check if we have a stored QR code image
                 @if($deployedItem->qr_code_image)
                     // Use the stored image
-                    const qrImage = '{{ $deployedItem->qr_code_image_url }}';
-                    document.getElementById('qrcode').innerHTML = `<img src="${qrImage}" alt="QR Code" class="w-full h-full">`;
+                    const qrImageUrl = '{{ $deployedItem->qr_code_image_url }}';
+                    if (qrImageUrl) {
+                        showQrCodeModalWithImage(qrImageUrl);
+                    } else {
+                        // Fall back to generating QR code on the fly
+                        showQrCodeModalGenerated();
+                    }
                 @else
                     // Generate QR code on the fly
-                    document.getElementById('qrcode').innerHTML = '';
-                    new QRCode(document.getElementById("qrcode"), {
-                        text: qrData,
-                        width: 200,
-                        height: 200,
-                        colorDark : "#000000",
-                        colorLight : "#ffffff",
-                        correctLevel : QRCode.CorrectLevel.H
-                    });
+                    showQrCodeModalGenerated();
                 @endif
-                
-                document.getElementById('qr-modal').classList.add('show');
             }
             
-            function closeModal() {
-                document.getElementById('qr-modal').classList.remove('show');
+            function showQrCodeModalWithImage(qrImageUrl) {
+                // First check if the image actually exists
+                const img = new Image();
+                img.onload = function() {
+                    // Image exists, show modal
+                    Swal.fire({
+                        title: 'QR Code for {{ $deployedItem->itemName }}',
+                        html: `
+                            <div class="text-center">
+                                <div class="mb-4">
+                                    <img src="${qrImageUrl}" 
+                                         alt="QR Code" 
+                                         class="mx-auto border rounded" 
+                                         style="width: 200px; height: 200px; object-fit: contain;">
+                                </div>
+                                <div class="text-sm text-gray-600 mb-2">QR Code Text:</div>
+                                <div class="font-mono text-xs bg-gray-100 p-2 rounded inline-block">{{ $deployedItem->qrCode }}</div>
+                            </div>
+                        `,
+                        showConfirmButton: true,
+                        confirmButtonText: 'Close',
+                        confirmButtonColor: '#3085d6',
+                        width: '400px'
+                    });
+                };
+                img.onerror = function() {
+                    // Image doesn't exist, show error and offer to regenerate
+                    Swal.fire({
+                        title: 'QR Code Image Not Found',
+                        text: 'The stored QR code image could not be loaded. Would you like to regenerate it?',
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonText: 'Regenerate',
+                        cancelButtonText: 'Cancel',
+                        confirmButtonColor: '#3085d6',
+                        cancelButtonColor: '#6b7280'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            generateQrCodeImage();
+                        }
+                    });
+                };
+                img.src = qrImageUrl;
+            }
+            
+            function showQrCodeModalGenerated() {
+                Swal.fire({
+                    title: 'QR Code for {{ $deployedItem->itemName }}',
+                    html: `
+                        <div class="text-center">
+                            <div class="mb-4" id="qrcode-container">
+                                <div id="qrcode"></div>
+                            </div>
+                            <div class="text-sm text-gray-600 mb-2">QR Code Text:</div>
+                            <div class="font-mono text-xs bg-gray-100 p-2 rounded inline-block">{{ $deployedItem->qrCode }}</div>
+                        </div>
+                    `,
+                    showConfirmButton: true,
+                    confirmButtonText: 'Close',
+                    confirmButtonColor: '#3085d6',
+                    width: '400px',
+                    didOpen: () => {
+                        // Generate QR code after modal opens
+                        document.getElementById('qrcode').innerHTML = '';
+                        new QRCode(document.getElementById("qrcode"), {
+                            text: '{{ $deployedItem->qrCode }}',
+                            width: 200,
+                            height: 200,
+                            colorDark : "#000000",
+                            colorLight : "#ffffff",
+                            correctLevel : QRCode.CorrectLevel.H
+                        });
+                    }
+                });
             }
             
             function printQRCode() {

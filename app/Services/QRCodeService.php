@@ -154,17 +154,30 @@ class QRCodeService
      */
     public static function getUrl($path)
     {
-        if ($path && Storage::disk('public')->exists($path)) {
-            // Use absolute URL instead of relative
-            $url = Storage::disk('public')->url($path);
+        if (!$path) {
+            return null;
+        }
+        
+        // Check if file exists in storage
+        if (!Storage::disk('public')->exists($path)) {
+            \Log::warning('QR code image not found in storage: ' . $path);
+            return null;
+        }
+        
+        try {
+            // Use asset() helper for public storage
+            $url = asset('storage/' . $path);
             
             // Ensure we have a proper URL
             if (strpos($url, 'http') !== 0) {
                 $url = url($url);
             }
             
+            \Log::info('QR code image URL generated: ' . $url);
             return $url;
+        } catch (\Exception $e) {
+            \Log::error('Failed to generate QR code image URL: ' . $e->getMessage());
+            return null;
         }
-        return null;
     }
 }

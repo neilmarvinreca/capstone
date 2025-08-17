@@ -5,7 +5,7 @@
         <div class="flex items-center">
             <a href="{{ route('dashboard') }}" class="-intro-x flex items-center">
                 <img alt="DSSC Logo" class="w-60" src="http://202.137.126.204:4455/uploads/settings/1_theG1690183835.gif">
-                <span class="text-white text-lg ml-3">Supply and Property Inventory Management System</span>
+                <span class="text-white text-lg ml-3 hidden sm:block">Supply and Property Office</span>
             </a>
         </div>
         <!-- END: Logo -->

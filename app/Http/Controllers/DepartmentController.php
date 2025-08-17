@@ -17,7 +17,8 @@ class DepartmentController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Department::withCount('supplies')
+        $query = Department::select('*')
+            ->selectRaw('(SELECT COUNT(*) FROM deployed_items WHERE deployed_items.departmentID = departments.departmentID) as deployed_items_count')
             ->with('user')
             ->orderBy('departmentID', 'asc');
         
@@ -118,10 +119,13 @@ class DepartmentController extends Controller
      */
     public function show(Department $department)
     {
-        // Eager load the user relationship and count of supplies
-        $department->load(['user', 'supplies' => function($query) {
-            $query->with('category')->latest()->take(10);
-        }])->loadCount('supplies');
+        // Eager load the user relationship and deployed items
+        $department->load(['user', 'deployedItems' => function($query) {
+            $query->latest()->take(10);
+        }]);
+        
+        // Manually set the count
+        $department->deployed_items_count = $department->deployedItems()->count();
         
         return view('departments.show', compact('department'));
     }
@@ -201,7 +205,8 @@ class DepartmentController extends Controller
     public function archived(Request $request)
     {
         $query = Department::onlyTrashed()
-            ->withCount('supplies')
+            ->select('*')
+            ->selectRaw('(SELECT COUNT(*) FROM deployed_items WHERE deployed_items.departmentID = departments.departmentID) as deployed_items_count')
             ->with('user')
             ->orderBy('deleted_at', 'desc');
             

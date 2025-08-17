@@ -29,7 +29,6 @@ class Department extends Model
     ];
     
     protected $hidden = ['deleted_at'];
-    protected $appends = ['supplies_count'];
 
     /**
      * Get the route key for the model.
@@ -77,11 +76,11 @@ class Department extends Model
     }
 
     /**
-     * Supplies count attribute.
+     * Supplies count attribute (for backward compatibility).
      */
     public function getSuppliesCountAttribute()
     {
-        return $this->supplies()->count();
+        return $this->deployed_items_count ?? $this->deployedItems()->count();
     }
 
     /**
