@@ -124,7 +124,8 @@ class DeployedItemController extends Controller
         
         // Manual entry validation
         $validated = $request->validate([
-            'deployedID' => 'required|string|unique:deployed_items,deployedID',
+            // Remove deployedID validation since it's auto-generated
+            // 'deployedID' => 'required|string|unique:deployed_items,deployedID',
             'itemName' => 'required|string|max:255',
             'itemDescription' => 'nullable|string',
             'dateAcquired' => 'required|date|before_or_equal:today',
@@ -156,6 +157,9 @@ class DeployedItemController extends Controller
 
                 // Create the deployed item
                 $deployedItem = DeployedItem::create($validated);
+
+                // Generate and store QR code image
+                $deployedItem->generateQrCodeImage();
 
                 // Log the creation activity
                 activity()
@@ -247,6 +251,9 @@ class DeployedItemController extends Controller
                     'qr_code' => 'DP-' . strtoupper(Str::random(10)),
                 ]);
                 
+                // Generate and store QR code image
+                $deployedItem->generateQrCodeImage();
+                
                 // Update supply quantity and recalculate amount
                 $supply->decrement('quantity', $item['quantity']);
                 
@@ -306,44 +313,29 @@ class DeployedItemController extends Controller
             return back()->with('error', 'Not enough quantity available in stock.');
         }
         
-        // Build attributes using available column names (supports camelCase or snake_case)
-        $table = 'deployed_items';
-        $attrs = [];
-        // Set the deployedID from the form
-        $attrs['deployedID'] = $request->deployedID;
-        $attrs[Schema::hasColumn($table, 'itemName') ? 'itemName' : (Schema::hasColumn($table, 'item_name') ? 'item_name' : 'itemName')] = $supply->name;
-        $attrs[Schema::hasColumn($table, 'itemDescription') ? 'itemDescription' : (Schema::hasColumn($table, 'item_description') ? 'item_description' : 'itemDescription')] = $supply->description;
-        $attrs[Schema::hasColumn($table, 'dateAcquired') ? 'dateAcquired' : (Schema::hasColumn($table, 'date_acquired') ? 'date_acquired' : 'dateAcquired')] = now();
-        $attrs[Schema::hasColumn($table, 'dateDeployed') ? 'dateDeployed' : (Schema::hasColumn($table, 'date_deployed') ? 'date_deployed' : 'dateDeployed')] = now();
-        $attrs['cost'] = $supply->unit_cost * $request->quantity;
-        $attrs[Schema::hasColumn($table, 'itemCategory') ? 'itemCategory' : (Schema::hasColumn($table, 'item_category') ? 'item_category' : 'itemCategory')] = $supply->category ? ($supply->category->categoryName ?? $supply->category->name) : 'Uncategorized';
-        $attrs['status'] = 'active';
-        // Department column name may be departmentID or department_id
-        $deptColumn = Schema::hasColumn($table, 'departmentID') ? 'departmentID' : (Schema::hasColumn($table, 'department_id') ? 'department_id' : 'departmentID');
-        $attrs[$deptColumn] = $request->departmentID;
-        if (Schema::hasColumn($table, 'purpose')) {
-            $attrs['purpose'] = $request->purpose;
-        }
-        if (Schema::hasColumn($table, 'quantity')) {
-            $attrs['quantity'] = $request->quantity;
-        }
-        if (Schema::hasColumn($table, 'condition')) {
-            $attrs['condition'] = 'new';
-        }
-        if (Schema::hasColumn($table, 'supply_id')) {
-            $attrs['supply_id'] = $supply->itemID;
-        }
-        if (Schema::hasColumn($table, 'deployed_by')) {
-            $attrs['deployed_by'] = auth()->id();
-        }
-        // QR code column might be qr_code or qrCode
-        $qrColumn = Schema::hasColumn($table, 'qr_code') ? 'qr_code' : (Schema::hasColumn($table, 'qrCode') ? 'qrCode' : 'qr_code');
-        $attrs[$qrColumn] = 'DP-' . strtoupper(Str::random(10));
-        if (Schema::hasColumn($table, 'remarks')) {
-            $attrs['remarks'] = 'Deployed from supply #' . $supply->itemID;
-        }
+        // Build attributes using the correct column names from the migration
+        $attrs = [
+            'itemName' => $supply->name,
+            'itemDescription' => $supply->description,
+            'dateAcquired' => $request->dateAcquired ?? now(),
+            'dateDeployed' => $request->dateDeployed ?? now(),
+            'cost' => $supply->unit_cost * $request->quantity,
+            'itemCategory' => $supply->category ? ($supply->category->categoryName ?? $supply->category->name) : 'Uncategorized',
+            'qrCode' => $request->qr_code ?? 'DP-' . strtoupper(Str::random(10)), // Map qr_code from form to qrCode in DB
+            'departmentID' => $request->departmentID,
+            'status' => $request->status ?? 'active',
+            'quantity' => $request->quantity,
+            'condition' => 'new',
+            'supply_id' => $supply->itemID,
+            'purpose' => $request->purpose,
+            'deployed_by' => auth()->id(),
+            'remarks' => $request->remarks ?? 'Deployed from supply #' . $supply->itemID,
+        ];
 
         $deployedItem = DeployedItem::create($attrs);
+        
+        // Generate and store QR code image
+        $deployedItem->generateQrCodeImage();
         
         // Update the supply quantity and recalculate amount
         $supply->decrement('quantity', $request->quantity);
@@ -400,7 +392,7 @@ class DeployedItemController extends Controller
      */
     public function edit(DeployedItem $deployedItem)
     {
-        $departments = Department::orderBy('officename')->get();
+        $departments = Department::with('user')->orderBy('officename')->get();
         
         return view('deployed_items.edit', [
             'deployedItem' => $deployedItem,
@@ -418,9 +410,6 @@ class DeployedItemController extends Controller
     public function update(Request $request, DeployedItem $deployedItem)
     {
         $validated = $request->validate([
-            'itemName' => 'required|string|max:255',
-            'itemDescription' => 'nullable|string',
-            'dateAcquired' => 'required|date|before_or_equal:today',
             'cost' => 'required|numeric|min:0',
             'quantity' => 'required|integer|min:1',
             'itemCategory' => 'required|string|max:255',
@@ -431,12 +420,10 @@ class DeployedItemController extends Controller
             'remarks' => 'nullable|string',
             'condition' => 'required|in:excellent,good,fair,poor',
             'purpose' => 'nullable|string',
+            'itemDescription' => 'nullable|string',
         ]);
 
-        // Format dates properly
-        if (isset($validated['dateAcquired'])) {
-            $validated['dateAcquired'] = \Carbon\Carbon::parse($validated['dateAcquired'])->format('Y-m-d');
-        }
+        // Format dateDeployed properly
         if (isset($validated['dateDeployed'])) {
             $validated['dateDeployed'] = \Carbon\Carbon::parse($validated['dateDeployed'])->format('Y-m-d');
         }
@@ -644,6 +631,40 @@ class DeployedItemController extends Controller
         } catch (\Exception $e) {
             return back()
                 ->with('error', 'Failed to permanently delete item: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Generate QR code image for a deployed item
+     *
+     * @param  \App\Models\DeployedItem  $deployedItem
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function generateQrCode(DeployedItem $deployedItem)
+    {
+        try {
+            $qrCodePath = $deployedItem->generateQrCodeImage();
+            
+            if ($qrCodePath) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'QR code image generated successfully!',
+                    'qr_code_image_url' => $deployedItem->fresh()->qr_code_image_url,
+                    'qr_code_text' => $deployedItem->qrCode
+                ]);
+            } else {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to generate QR code image. Please check if QR code text exists.'
+                ], 422);
+            }
+        } catch (\Exception $e) {
+            \Log::error('Error generating QR code image: ' . $e->getMessage());
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to generate QR code image: ' . $e->getMessage()
+            ], 500);
         }
     }
 }

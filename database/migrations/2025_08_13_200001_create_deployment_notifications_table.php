@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('deployment_notifications', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->string('deployed_item_id');
+            $table->unsignedBigInteger('deployed_item_id');
             $table->text('message');
             $table->boolean('is_read')->default(false);
             $table->string('type')->default('deployment');

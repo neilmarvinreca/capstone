@@ -19,6 +19,8 @@ class DeployedItem extends Model
 
     protected $table = 'deployed_items';
     protected $primaryKey = 'deployedID';
+    public $incrementing = true;
+    protected $keyType = 'int';
     
     /**
      * Get the route key for the model.
@@ -31,13 +33,15 @@ class DeployedItem extends Model
     }
     
     protected $fillable = [
-        'deployedID',
+        // Remove deployedID from fillable since it's auto-incrementing
+        // 'deployedID',
         // CamelCase columns
         'itemName',
         'itemDescription',
         'dateAcquired',
         'itemCategory',
         'qrCode',
+        'qr_code_image',
         'departmentID',
         'dateDeployed',
         // snake_case variants (some databases use these)
@@ -46,6 +50,7 @@ class DeployedItem extends Model
         'date_acquired',
         'item_category',
         'qr_code',
+        'qr_code_image',
         'department_id',
         'date_deployed',
         // shared fields
@@ -56,6 +61,7 @@ class DeployedItem extends Model
         'condition',
         'supply_id',
         'purpose',
+        'deployed_by',
     ];
 
     protected $casts = [
@@ -180,5 +186,47 @@ class DeployedItem extends Model
     public function notifications()
     {
         return $this->hasMany(\App\Models\DeploymentNotification::class, 'deployed_item_id', 'deployedID');
+    }
+
+    /**
+     * Get the QR code image URL
+     */
+    public function getQrCodeImageUrlAttribute()
+    {
+        if ($this->qr_code_image) {
+            return \App\Services\QRCodeService::getUrl($this->qr_code_image);
+        }
+        return null;
+    }
+
+    /**
+     * Generate and store QR code image
+     */
+    public function generateQrCodeImage()
+    {
+        if (!$this->qrCode) {
+            return false;
+        }
+
+        try {
+            $qrCodePath = \App\Services\QRCodeService::generateForDeployedItem($this);
+            $this->update(['qr_code_image' => $qrCodePath]);
+            return $qrCodePath;
+        } catch (\Exception $e) {
+            \Log::error('Failed to generate QR code image for deployed item: ' . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Delete QR code image when item is deleted
+     */
+    protected static function booted()
+    {
+        static::deleting(function ($deployedItem) {
+            if ($deployedItem->qr_code_image) {
+                \App\Services\QRCodeService::delete($deployedItem->qr_code_image);
+            }
+        });
     }
 }

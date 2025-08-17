@@ -12,11 +12,9 @@ return new class extends Migration
             $table->id('departmentID');
             $table->string('locationcode')->unique();
             $table->string('officename');
-            $table->unsignedBigInteger('accountableper');
+            $table->unsignedBigInteger('accountableper')->nullable();
             $table->string('description');
             $table->timestamps();
-
-            $table->foreign('accountableper')->references('id')->on('users')->onDelete('cascade');
             $table->softDeletes();
         });
     }

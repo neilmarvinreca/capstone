@@ -31,11 +31,17 @@
         <!-- Department -->
         <div class="col-span-12 md:col-span-6">
             <div class="input-form">
-                <label for="departmentID" class="form-label">Department <span class="text-danger">*</span></label>
+                <label for="departmentID" class="form-label">Department (Accountable Person) <span class="text-danger">*</span></label>
                 <select id="departmentID" name="departmentID" class="form-select w-full @error('departmentID') border-danger @enderror" required>
-                    <option value="">Select Department</option>
-                    @foreach($departments as $id => $name)
-                        <option value="{{ $id }}" {{ old('departmentID', $deployedItem->departmentID) == $id ? 'selected' : '' }}>{{ $name }}</option>
+                    <option value="" disabled>Select a department</option>
+                    @foreach($departments as $department)
+                        @php
+                            $accountablePerson = $department->user ? $department->user->name : 'No Accountable Person';
+                        @endphp
+                        <option value="{{ $department->departmentID }}" 
+                                {{ old('departmentID', $deployedItem->departmentID) == $department->departmentID ? 'selected' : '' }}>
+                            {{ $accountablePerson }} ({{ $department->officename }})
+                        </option>
                     @endforeach
                 </select>
                 @error('departmentID')
@@ -82,10 +88,10 @@
             <div class="input-form">
                 <label for="cost" class="form-label">Cost <span class="text-danger">*</span></label>
                 <div class="relative">
-                    <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                        <span class="text-gray-500">₱</span>
+                    <div class="absolute inset-y-0 left-0 flex items-center pl-1 pointer-events-none z-10">
+                    <span class="text-xs align-super">₱</span>
                     </div>
-                    <input type="number" id="cost" name="cost" step="0.01" min="0" class="form-control w-full pl-8 @error('cost') border-danger @enderror" value="{{ old('cost', $deployedItem->cost) }}" required>
+                    <input type="number" id="cost" name="cost" step="0.01" min="0" class="form-control w-full pl-4 @error('cost') border-danger @enderror" value="{{ old('cost', $deployedItem->cost) }}" required>
                 </div>
                 @error('cost')
                     <div class="text-danger mt-2">{{ $message }}</div>

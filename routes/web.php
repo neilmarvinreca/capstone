@@ -56,6 +56,109 @@ Route::middleware('auth')->group(function () {
         Route::put('{id}/archive', [DeployedItemController::class, 'archive'])->name('archive');
         Route::post('{id}/restore', [DeployedItemController::class, 'restore'])->name('restore');
         Route::delete('{id}/force-delete', [DeployedItemController::class, 'forceDelete'])->name('force-delete');
+        Route::post('{deployedItem}/generate-qr', [DeployedItemController::class, 'generateQrCode'])->name('generate-qr');
+        Route::get('debug/qr-codes', function() {
+            $deployedItems = \App\Models\DeployedItem::all();
+            $debug = [];
+            foreach ($deployedItems as $item) {
+                $debug[] = [
+                    'id' => $item->deployedID,
+                    'qr_code' => $item->qrCode,
+                    'qr_code_image' => $item->qr_code_image,
+                    'qr_code_image_url' => $item->qr_code_image_url,
+                    'storage_exists' => \Storage::disk('public')->exists($item->qr_code_image),
+                    'full_path' => storage_path('app/public/' . $item->qr_code_image)
+                ];
+            }
+            return response()->json($debug);
+        })->name('debug-qr-codes');
+        
+        Route::get('test/qr-image/{filename}', function($filename) {
+            $path = 'qr-codes/' . $filename;
+            if (\Storage::disk('public')->exists($path)) {
+                $file = \Storage::disk('public')->get($path);
+                return response($file, 200, [
+                    'Content-Type' => 'image/png',
+                    'Cache-Control' => 'no-cache'
+                ]);
+            }
+            return response('Image not found', 404);
+        })->name('test-qr-image');
+        
+        Route::get('download/qr-code/{deployedItem}', function(\App\Models\DeployedItem $deployedItem) {
+            if (!$deployedItem->qr_code_image) {
+                return response('QR Code not found', 404);
+            }
+            
+            $path = $deployedItem->qr_code_image;
+            if (\Storage::disk('public')->exists($path)) {
+                $file = \Storage::disk('public')->get($path);
+                $filename = 'qr_code_' . $deployedItem->deployedID . '_' . $deployedItem->qrCode . '.png';
+                
+                return response($file, 200, [
+                    'Content-Type' => 'image/png',
+                    'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+                    'Cache-Control' => 'no-cache',
+                    'Content-Length' => strlen($file)
+                ]);
+            }
+            
+            return response('QR Code image not found', 404);
+        })->name('download-qr-code');
+        
+        Route::get('view/qr-code/{deployedItem}', function(\App\Models\DeployedItem $deployedItem) {
+            if (!$deployedItem->qr_code_image) {
+                \Log::error('QR Code view route: No QR code image found for item ' . $deployedItem->deployedID);
+                return response('QR Code not found', 404);
+            }
+            
+            $path = $deployedItem->qr_code_image;
+            \Log::info('QR Code view route: Attempting to serve image', [
+                'deployedID' => $deployedItem->deployedID,
+                'path' => $path,
+                'exists' => \Storage::disk('public')->exists($path),
+                'size' => \Storage::disk('public')->exists($path) ? \Storage::disk('public')->size($path) : 'N/A'
+            ]);
+            
+            if (\Storage::disk('public')->exists($path)) {
+                $file = \Storage::disk('public')->get($path);
+                
+                \Log::info('QR Code view route: Image served successfully', [
+                    'deployedID' => $deployedItem->deployedID,
+                    'file_size' => strlen($file),
+                    'is_png' => strpos($file, "\x89PNG") === 0
+                ]);
+                
+                return response($file, 200, [
+                    'Content-Type' => 'image/png',
+                    'Cache-Control' => 'no-cache',
+                    'Content-Length' => strlen($file)
+                ]);
+            }
+            
+            \Log::error('QR Code view route: Image file not found at path: ' . $path);
+            return response('QR Code image not found', 404);
+        })->name('view-qr-code');
+        
+        Route::get('test/qr-image-direct/{filename}', function($filename) {
+            $path = 'qr-codes/' . $filename;
+            \Log::info('Direct QR image test route', [
+                'filename' => $filename,
+                'path' => $path,
+                'exists' => \Storage::disk('public')->exists($path),
+                'size' => \Storage::disk('public')->exists($path) ? \Storage::disk('public')->size($path) : 'N/A'
+            ]);
+            
+            if (\Storage::disk('public')->exists($path)) {
+                $file = \Storage::disk('public')->get($path);
+                return response($file, 200, [
+                    'Content-Type' => 'image/png',
+                    'Cache-Control' => 'no-cache',
+                    'Content-Length' => strlen($file)
+                ]);
+            }
+            return response('Image not found', 404);
+        })->name('test-qr-image-direct');
     });
     
     // Deployed Items Resource Route

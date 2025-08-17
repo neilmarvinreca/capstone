@@ -12,8 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('deployed_items', function (Blueprint $table) {
-            $table->unsignedBigInteger('supply_id')->nullable()->after('departmentID');
-            $table->foreign('supply_id')->references('itemID')->on('supplies')->onDelete('set null');
+            $table->string('qr_code_image')->nullable()->after('qrCode');
         });
     }
 
@@ -23,8 +22,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('deployed_items', function (Blueprint $table) {
-            $table->dropForeign(['supply_id']);
-            $table->dropColumn('supply_id');
+            $table->dropColumn('qr_code_image');
         });
     }
 };

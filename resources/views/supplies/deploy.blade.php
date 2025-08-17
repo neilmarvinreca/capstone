@@ -33,7 +33,6 @@
 
     <form action="{{ route('deployed-items.store') }}" method="POST" id="deployForm" class="grid grid-cols-12 gap-6" onsubmit="return handleFormSubmit(event)">
         @csrf
-        <input type="hidden" name="deployedID" value="{{ $deployedID }}">
         
         <!-- Select Supply (drives item details below) -->
         <div class="col-span-12 sm:col-span-6">

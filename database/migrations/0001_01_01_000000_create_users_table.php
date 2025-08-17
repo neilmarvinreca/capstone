@@ -18,8 +18,13 @@ return new class extends Migration
             $table->string('role')->default('Department User');
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
+            $table->boolean('is_admin')->default(false);
+            $table->integer('login_attempts')->default(0);
+            $table->timestamp('locked_until')->nullable();
+            $table->unsignedBigInteger('department_id')->nullable();
             $table->rememberToken();
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

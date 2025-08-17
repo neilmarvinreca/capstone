@@ -15,8 +15,8 @@ return new class extends Migration
             $table->bigIncrements('categoryID')->primary();
             $table->string('categoryName', 100)->unique();
             $table->text('description')->nullable();
-            $table->timestamp('created_at')->useCurrent();
-            $table->timestamp('updated_at')->nullable()->useCurrentOnUpdate();
+            $table->timestamps();
+            $table->softDeletes();
         });
     }
 

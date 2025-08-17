@@ -11,8 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('categories', function (Blueprint $table) {
-            $table->softDeletes();
+        Schema::table('activity_log', function (Blueprint $table) {
+            $table->string('event')->nullable()->after('properties');
+            $table->uuid('batch_uuid')->nullable()->after('event');
         });
     }
 
@@ -21,8 +22,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('categories', function (Blueprint $table) {
-            $table->dropSoftDeletes();
+        Schema::table('activity_log', function (Blueprint $table) {
+            $table->dropColumn(['event', 'batch_uuid']);
         });
     }
 };

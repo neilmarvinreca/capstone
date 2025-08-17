@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('deployment_requests', function (Blueprint $table) {
             $table->id('requestID');
-            $table->string('deployedID');
+            $table->unsignedBigInteger('deployedID');
             $table->enum('requestType', ['transfer', 'status_change', 'maintenance', 'other']);
             $table->foreignId('requestBy')->constrained('users')->onDelete('cascade');
             $table->dateTime('requestDate');
@@ -22,7 +22,6 @@ return new class extends Migration
             $table->enum('status', ['pending', 'approved', 'rejected'])->default('pending');
             $table->timestamps();
             
-            // Add foreign key constraint manually to ensure proper data type handling
             $table->foreign('deployedID')->references('deployedID')->on('deployed_items')->onDelete('cascade');
         });
     }

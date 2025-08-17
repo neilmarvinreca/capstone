@@ -15,15 +15,35 @@ class DeploymentNotificationService
     public static function createDeploymentNotifications(DeployedItem $deployedItem)
     {
         try {
+            // Debug information
+            Log::info("Starting deployment notifications for item: {$deployedItem->itemName}");
+            Log::info("Department ID: {$deployedItem->departmentID}");
+            
             // Get all users in the department where the item was deployed
             $departmentUsers = User::where('department_id', $deployedItem->departmentID)
                 ->where('role', User::ROLE_DEPARTMENT_USER)
                 ->get();
 
+            Log::info("Found {$departmentUsers->count()} department users");
+
             // Get the accountable person for the department
             $accountablePerson = null;
-            if ($deployedItem->department && $deployedItem->department->accountableper) {
-                $accountablePerson = User::find($deployedItem->department->accountableper);
+            if ($deployedItem->department) {
+                Log::info("Department found: {$deployedItem->department->officename}");
+                Log::info("Accountable person ID: {$deployedItem->department->accountableper}");
+                
+                if ($deployedItem->department->accountableper) {
+                    $accountablePerson = User::find($deployedItem->department->accountableper);
+                    if ($accountablePerson) {
+                        Log::info("Accountable person found: {$accountablePerson->name} (ID: {$accountablePerson->id})");
+                    } else {
+                        Log::warning("Accountable person not found for ID: {$deployedItem->department->accountableper}");
+                    }
+                } else {
+                    Log::warning("No accountable person assigned to department: {$deployedItem->department->officename}");
+                }
+            } else {
+                Log::warning("Department not found for ID: {$deployedItem->departmentID}");
             }
 
             // Create notifications for all department users
@@ -33,6 +53,7 @@ class DeploymentNotificationService
                     'deployed_item_id' => $deployedItem->deployedID,
                     'message' => "New item '{$deployedItem->itemName}' has been deployed to your department",
                     'type' => 'deployment',
+                    'is_read' => false,
                     'data' => [
                         'item_name' => $deployedItem->itemName,
                         'item_description' => $deployedItem->itemDescription,
@@ -42,6 +63,7 @@ class DeploymentNotificationService
                         'department' => $deployedItem->department?->officename ?? 'Unknown Department'
                     ]
                 ]);
+                Log::info("Created notification for department user: {$user->name}");
             }
 
             // Create special notification for the accountable person
@@ -51,6 +73,7 @@ class DeploymentNotificationService
                     'deployed_item_id' => $deployedItem->deployedID,
                     'message' => "New item '{$deployedItem->itemName}' has been deployed to your department as the accountable person",
                     'type' => 'deployment_accountable',
+                    'is_read' => false,
                     'data' => [
                         'item_name' => $deployedItem->itemName,
                         'item_description' => $deployedItem->itemDescription,
@@ -62,12 +85,16 @@ class DeploymentNotificationService
                         'deployment_value' => $deployedItem->cost ?? 0
                     ]
                 ]);
+                Log::info("Created accountable person notification for: {$accountablePerson->name}");
+            } else {
+                Log::warning("No accountable person notification created - accountable person not found");
             }
 
-            Log::info("Created deployment notifications for {$deployedItem->itemName} to department {$deployedItem->departmentID}");
+            Log::info("Completed deployment notifications for {$deployedItem->itemName} to department {$deployedItem->departmentID}");
 
         } catch (\Exception $e) {
             Log::error("Failed to create deployment notifications: " . $e->getMessage());
+            Log::error("Stack trace: " . $e->getTraceAsString());
         }
     }
 
